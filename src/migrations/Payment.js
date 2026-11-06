@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const paymentSchema = new mongoose.Schema({
   userId: { type: String, required: true, ref: "Users" },
-  planid: { type: String, required: true, ref: "Plans" },
+  planId: { type: String, required: true, ref: "Plans" },
   amount: { type: Number, required: true },
   transactionId: { type: String, required: true, unique: true },
   status: {
@@ -9,8 +9,9 @@ const paymentSchema = new mongoose.Schema({
     required: true,
     enum: ["verified", "pending", "failed"],
   },
-  verifiedBy: { type: String, ref: "Users" },
+  verifiedBy: { type: String, required: true, ref: "Users", index: true },
   date: { type: Date, default: Date.now },
 });
+paymentSchema.index({ userId: 1, status: 1 });
 const Payment = mongoose.model("Payments", paymentSchema);
 module.exports = Payment;
