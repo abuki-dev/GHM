@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { incrementId } = require("../utils/increment.JS");
+const { incrementId } = require("../utils/increment.js");
 
 const usersSchema = new mongoose.Schema({
   userId: { type: String, required: true, unique: true, index: true },
@@ -13,12 +13,20 @@ const usersSchema = new mongoose.Schema({
   },
   gender: { type: String, enum: ["male", "female", "other"] },
   age: { type: Number },
-  phone: { type: String, required: true, unique: true, index: true },
+  phone: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true,
+    match: [/^\d{10}$/, "Please fill a valid 10-digit phone number"],
+  },
   createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
 });
-usersSchema.pre("save", async function () {
-  await incrementId(this, "userId");
+usersSchema.pre("save", async function (next) {
+  if (this.isNew && !this.userId) {
+    await incrementId(this, "userId");
+  }
 });
 const Users = mongoose.model("users", usersSchema);
 module.exports = Users;

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { incrementId } = require("../utils/increment.JS");
+const { incrementId } = require("../utils/increment.js");
 const shiftSchema = new mongoose.Schema({
   shiftId: { type: String, required: true, unique: true, index: true },
   userId: { type: String, required: true, ref: "users" },

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { incrementId } = require("../utils/increment.JS");
+const { incrementId } = require("../utils/increment.js");
 
 const membershpPlanSchema = new mongoose.Schema({
   planId: { type: String, required: true, unique: true, index: true },

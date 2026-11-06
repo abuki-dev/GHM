@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { incrementId } = require("../utils/increment.JS");
+const { incrementId } = require("../utils/increment.js");
 const trainerSchema = new mongoose.Schema({
   trainerId: { type: String, required: true, unique: true, ref: "users" },
   specialization: { type: String, required: true },
@@ -8,7 +8,9 @@ const trainerSchema = new mongoose.Schema({
   hireDate: { type: Date, required: true },
 });
 trainerSchema.pre("save", async function () {
-  await incrementId(this, "trainerId");
+  if (this.isNew && !this.trainerId) {
+    await incrementId(this, "trainerId");
+  }
 });
 const Trainer = mongoose.model("trainers", trainerSchema);
 module.exports = Trainer;

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { incrementId } = require("../utils/increment.JS");
+const { incrementId } = require("../utils/increment.js");
 const memberSchema = new mongoose.Schema({
   memberId: {
     type: String,
@@ -13,7 +13,9 @@ const memberSchema = new mongoose.Schema({
   height: { type: Number, required: true },
 });
 memberSchema.pre("save", async function () {
-  await incrementId(this, "memberId");
+  if (this.isNew && !this.memberId) {
+    await incrementId(this, "memberId");
+  }
 });
-const Member = mongoose.model("members", memberSchema);
-module.exports = Member;
+const Members = mongoose.model("members", memberSchema);
+module.exports = Members;
