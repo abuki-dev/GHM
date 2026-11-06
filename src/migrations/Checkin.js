@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const checkinSchema = new mongoose.Schema({
-  member_id: {
+  userId: {
     type: String,
-    ref: "Members",
+    ref: "members",
     required: true,
     index: true,
   },

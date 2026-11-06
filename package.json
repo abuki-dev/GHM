@@ -1,7 +1,7 @@
 {
   "name": "ghm",
   "version": "1.0.0",
-  "description": "",
+  "description": "A robust, relational database-backed backend architecture and access control engine for fitness centers. This system manages multi-tier memberships (`REGULAR`, `VIP`, `VVIP`), capacity-based shift schedules, trainer allocations, automated turnstile QR scanning, and workout session logging.",
   "main": "src/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -32,5 +32,13 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abuki-dev/GHM.git"
+  },
+  "bugs": {
+    "url": "https://github.com/abuki-dev/GHM/issues"
+  },
+  "homepage": "https://github.com/abuki-dev/GHM#readme"
 }

@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
+const { incrementId } = require("../utils/increment.JS");
 
 const usersSchema = new mongoose.Schema({
-  _id: { type: String, required: true, unique: true, index: true },
+  userId: { type: String, required: true, unique: true, index: true },
   full_name: { type: String, required: true },
   email: { type: String, required: true, unique: true, index: true },
   password: { type: String, required: true },
@@ -16,5 +17,8 @@ const usersSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
 });
-const Users = mongoose.model("Users", usersSchema);
+usersSchema.pre("save", async function () {
+  await incrementId(this, "userId");
+});
+const Users = mongoose.model("users", usersSchema);
 module.exports = Users;

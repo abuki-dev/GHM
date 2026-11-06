@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const sessionSchema = new mongoose.Schema({
   member_id: {
     type: String,
-    ref: "Members",
+    ref: "members",
     required: true,
   },
   trainer_id: {
     type: String,
-    ref: "Trainers",
+    ref: "trainers",
     required: true,
   },
   start_time: { type: Date, default: Date.now },
@@ -23,4 +23,4 @@ const sessionSchema = new mongoose.Schema({
   client_note: { type: String },
   date_duration: { type: Number, required: true },
 });
-module.exports = mongoose.model("Session", sessionSchema);
+module.exports = mongoose.model("sessions", sessionSchema);

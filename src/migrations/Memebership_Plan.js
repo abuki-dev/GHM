@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
+const { incrementId } = require("../utils/increment.JS");
 
 const membershpPlanSchema = new mongoose.Schema({
-  _id: { type: String, required: true, unique: true, index: true },
+  planId: { type: String, required: true, unique: true, index: true },
   Title: { type: String, required: true, index: true },
   description: { type: String, required: true },
   duration_days: { type: Number, required: true },
@@ -9,9 +10,12 @@ const membershpPlanSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   training_id: {
     type: String,
-    ref: "Trainings",
+    ref: "trainings",
     required: true,
   },
 });
+membershpPlanSchema.pre("save", async function () {
+  await incrementId(this, "planId");
+});
 membershpPlanSchema.index({ tier: 1, price: -1 });
-module.exports = mongoose.model("MembershipPlan", membershpPlanSchema);
+module.exports = mongoose.model("membershipplans", membershpPlanSchema);

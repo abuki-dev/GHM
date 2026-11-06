@@ -1,21 +1,22 @@
 const mongoose = require("mongoose");
+const { incrementId } = require("../utils/increment.JS");
 
 const membershipPurchaseSchema = new mongoose.Schema({
-  _id: { type: String, required: true, unique: true, index: true },
+  purchaseId: { type: String, required: true, unique: true, index: true },
   member_id: {
     type: String,
-    ref: "Members",
+    ref: "members",
     required: true,
     index: true,
   },
   membership_plan_id: {
     type: String,
-    ref: "MembershipPlans",
+    ref: "membershipplans",
     required: true,
   },
   payment_id: {
     type: String,
-    ref: "Payments",
+    ref: "payments",
     required: true,
   },
   start_date: { type: Date, required: true },
@@ -26,5 +27,8 @@ const membershipPurchaseSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+});
+membershipPurchaseSchema.pre("save", async function () {
+  await incrementId(this, "purchaseId");
 });
 module.exports = mongoose.model("MembershipPurchase", membershipPurchaseSchema);
