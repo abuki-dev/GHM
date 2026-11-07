@@ -1,6 +1,4 @@
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const { validationResult } = require("express-validator");
 
 const { signToken, cookieOptions } = require("../utils/token");
 const { Users, Trainer, Member } = require("../migrations");
@@ -17,7 +15,6 @@ module.exports.register = async (req, res, next) => {
       phone,
       ...extraDetails
     } = req.body;
-
     const exstingUser = await Users.findOne({ email });
     if (exstingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -35,11 +32,8 @@ module.exports.register = async (req, res, next) => {
       phone,
     });
 
-    await newUser.save();
-
-    console.log("New user created:", newUser);
     if (role === "member" && extraDetails) {
-      await Member.create({
+      const member = await Member.create({
         dateOfBirth: extraDetails.dateOfBirth,
         weight: extraDetails.weight,
         height: extraDetails.height,
@@ -54,6 +48,7 @@ module.exports.register = async (req, res, next) => {
         hireDate: extraDetails.hireDate || new Date(),
       });
     }
+    await newUser.save();
 
     return res.status(201).json({
       message: "User registered successfully",
@@ -70,6 +65,8 @@ module.exports.register = async (req, res, next) => {
         message: `Error Cannot use existing value: ${JSON.stringify(error.keyValue)}`,
       });
     }
+
+    next(error);
   }
 };
 
