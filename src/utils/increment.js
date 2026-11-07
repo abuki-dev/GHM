@@ -10,20 +10,17 @@ const Counter =
 
 module.exports.incrementId = async function (doc, dbmodel) {
   if (doc.isNew) {
+    console.log("Incrementing ID for model:", dbmodel);
     try {
       const prefix = dbmodel.replace("Id", "").toUpperCase();
       const counter = await Counter.findOneAndUpdate(
-        { _id: dbmodel },
-        { $inc: { sequence_value: 1 } },
+        { _id: dbmodel }, // Finds the doc (e.g., { _id: "userId" })
+        { $inc: { sequence_value: 1 } }, // Atomically increments the counter
         {
-          upsert: true,
-          new: true,
+          upsert: true, // Creates the counter document if it doesn't exist
+          returnDocument: "after", // Fixes the deprecation warning (replaces new: true)
         },
       );
-      // dbmodel = ; // Remove "Id" from the model name
-      // // Dynamically sets the id field (e.g., doc._id or doc.studentId)
-      // doc[dbmodel] = `${dbmodel}-${counter.sequence_value}`;
-
       const paddedSeq = String(counter.sequence_value).padStart(3, "0");
       doc[dbmodel] = `${prefix}-${paddedSeq}`;
     } catch (error) {

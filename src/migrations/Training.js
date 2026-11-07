@@ -7,7 +7,7 @@ const trainingSchema = new mongoose.Schema({
   description: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
-trainingSchema.pre("save", async function () {
+trainingSchema.pre("validate", async function () {
   await incrementId(this, "trainingId");
 });
 const Training = mongoose.model("trainings", trainingSchema);

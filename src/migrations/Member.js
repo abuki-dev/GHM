@@ -12,7 +12,7 @@ const memberSchema = new mongoose.Schema({
   weight: { type: Number, required: true },
   height: { type: Number, required: true },
 });
-memberSchema.pre("save", async function () {
+memberSchema.pre("validate", async function () {
   await incrementId(this, "memberId");
 });
 const Members = mongoose.model("members", memberSchema);

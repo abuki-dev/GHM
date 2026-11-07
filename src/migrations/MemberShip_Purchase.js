@@ -28,7 +28,7 @@ const membershipPurchaseSchema = new mongoose.Schema({
     index: true,
   },
 });
-membershipPurchaseSchema.pre("save", async function () {
+membershipPurchaseSchema.pre("validate", async function () {
   await incrementId(this, "purchaseId");
 });
 const MembershipPurchase = mongoose.model(

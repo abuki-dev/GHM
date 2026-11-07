@@ -13,8 +13,6 @@ const { notFound, errorHandler } = require("./middlewares/errorHandler");
 
 const app = express();
 
-const indexRouter = require('./routes/index');
-
 if (env.isProd) app.set("trust proxy", 1);
 
 app.use(helmet());
@@ -24,8 +22,15 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 app.use(cookieParser());
 app.use(passport.initialize());
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: true, legacyHeaders: false }));
-app.use("/api", indexRouter);
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }),
+);
+app.use("/api", routes);
 app.use(notFound);
 app.use(errorHandler);
 

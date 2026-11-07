@@ -45,15 +45,15 @@ const ValidateRegister = [
     .withMessage("Invalid role"),
 
   body("phone")
-    .trim()
-    .notEmpty()
+    .trim() // 1. Clean spaces at ends
+    .blacklist(" ()-") // 2. STRIP symbols out first!
+    .notEmpty() // 3. Ensure it's not blank now
     .withMessage("Phone number is required")
-    .isMobilePhone()
-    .blacklist(" ()-")
-    .withMessage("Invalid phone number format"),
+    .isMobilePhone("any") // 4. Validate the cleanly stripped string
+    .withMessage("Invalid phone number format"), // 5. Error binds to isMobilePhone
 ];
 
-const validateLogin =[
+const validateLogin = [
   body("email")
     .trim()
     .notEmpty()
@@ -62,11 +62,9 @@ const validateLogin =[
     .withMessage("Invalid email format")
     .normalizeEmail(),
 
-  body("password")
-    .trim()
-    .notEmpty()
-    .withMessage("Password is required"),   
-]
+  body("password").trim().notEmpty().withMessage("Password is required"),
+];
 module.exports = {
-  ValidateRegister, validateLogin
+  ValidateRegister,
+  validateLogin,
 };

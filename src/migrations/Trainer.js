@@ -7,7 +7,7 @@ const trainerSchema = new mongoose.Schema({
   salary: { type: Number, required: true },
   hireDate: { type: Date, required: true },
 });
-trainerSchema.pre("save", async function () {
+trainerSchema.pre("validate", async function () {
   await incrementId(this, "trainerId");
 });
 const Trainer = mongoose.model("trainers", trainerSchema);

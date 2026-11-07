@@ -15,7 +15,7 @@ module.exports.register = async (req, res, next) => {
       gender,
       age,
       phone,
-      extraDetails,
+      ...extraDetails
     } = req.body;
 
     const exstingUser = await Users.findOne({ email });
@@ -37,6 +37,7 @@ module.exports.register = async (req, res, next) => {
 
     await newUser.save();
 
+    console.log("New user created:", newUser);
     if (role === "member" && extraDetails) {
       await Member.create({
         dateOfBirth: extraDetails.dateOfBirth,
@@ -64,7 +65,11 @@ module.exports.register = async (req, res, next) => {
       },
     });
   } catch (error) {
-    next(error);
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: `Error Cannot use existing value: ${JSON.stringify(error.keyValue)}`,
+      });
+    }
   }
 };
 

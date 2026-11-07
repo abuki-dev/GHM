@@ -14,7 +14,7 @@ const membershpPlanSchema = new mongoose.Schema({
     required: true,
   },
 });
-membershpPlanSchema.pre("save", async function () {
+membershpPlanSchema.pre("validate", async function () {
   await incrementId(this, "planId");
 });
 membershpPlanSchema.index({ tier: 1, price: -1 });

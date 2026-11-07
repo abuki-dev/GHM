@@ -20,7 +20,7 @@ const shiftSchema = new mongoose.Schema({
   endTime: { type: String, required: true },
   max_capacity: { type: Number, required: true, check: (value) => value >= 0 },
 });
-shiftSchema.pre("save", async function () {
+shiftSchema.pre("validate", async function () {
   await incrementId(this, "shiftId");
 });
 const Shift = mongoose.model("shifts", shiftSchema);
