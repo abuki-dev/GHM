@@ -6,24 +6,15 @@ const { register, login } = require("../controllers/auth.controller");
 const {
   ValidateRegister,
   validateLogin,
+  handleValidationErrors,
 } = require("../validator/auth.validator");
-const { body, validationResult } = require('express-validator');
-
-
-const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array().map(e => e.msg) });
-  }
-  next();
-};
-
-authRouter.post("/register", ValidateRegister, handleValidationErrors, register);
 
 authRouter.post(
-  "/login",
-  validateLogin,
+  "/register",
+  ValidateRegister,
   handleValidationErrors,
-  login,
+  register,
 );
-module.exports =authRouter;
+
+authRouter.post("/login", validateLogin, handleValidationErrors, login);
+module.exports = authRouter;

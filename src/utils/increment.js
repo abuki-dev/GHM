@@ -13,6 +13,7 @@ module.exports.incrementId = async function (doc, dbmodel) {
     console.log("Incrementing ID for model:", dbmodel);
     try {
       const prefix = dbmodel.replace("Id", "").toUpperCase();
+      console.log(dbmodel);
       const counter = await Counter.findOneAndUpdate(
         { _id: dbmodel }, // Finds the doc (e.g., { _id: "userId" })
         { $inc: { sequence_value: 1 } }, // Atomically increments the counter
