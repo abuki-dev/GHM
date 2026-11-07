@@ -23,4 +23,5 @@ const sessionSchema = new mongoose.Schema({
   client_note: { type: String },
   date_duration: { type: Number, required: true },
 });
-module.exports = mongoose.model("sessions", sessionSchema);
+const Session = mongoose.model("sessions", sessionSchema);
+module.exports = Session;

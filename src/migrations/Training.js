@@ -10,4 +10,5 @@ const trainingSchema = new mongoose.Schema({
 trainingSchema.pre("save", async function () {
   await incrementId(this, "trainingId");
 });
-module.exports = mongoose.model("trainings", trainingSchema);
+const Training = mongoose.model("trainings", trainingSchema);
+module.exports = Training;

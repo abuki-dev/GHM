@@ -13,9 +13,7 @@ const memberSchema = new mongoose.Schema({
   height: { type: Number, required: true },
 });
 memberSchema.pre("save", async function () {
-  if (this.isNew && !this.memberId) {
-    await incrementId(this, "memberId");
-  }
+  await incrementId(this, "memberId");
 });
 const Members = mongoose.model("members", memberSchema);
 module.exports = Members;

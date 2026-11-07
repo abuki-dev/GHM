@@ -18,4 +18,5 @@ membershpPlanSchema.pre("save", async function () {
   await incrementId(this, "planId");
 });
 membershpPlanSchema.index({ tier: 1, price: -1 });
-module.exports = mongoose.model("membershipplans", membershpPlanSchema);
+const MembershipPlan = mongoose.model("membershipplans", membershpPlanSchema);
+module.exports = MembershipPlan;

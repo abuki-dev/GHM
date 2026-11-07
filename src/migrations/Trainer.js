@@ -8,9 +8,7 @@ const trainerSchema = new mongoose.Schema({
   hireDate: { type: Date, required: true },
 });
 trainerSchema.pre("save", async function () {
-  if (this.isNew && !this.trainerId) {
-    await incrementId(this, "trainerId");
-  }
+  await incrementId(this, "trainerId");
 });
 const Trainer = mongoose.model("trainers", trainerSchema);
 module.exports = Trainer;

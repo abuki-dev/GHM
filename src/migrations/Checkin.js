@@ -9,4 +9,4 @@ const checkinSchema = new mongoose.Schema({
   },
   checkin_time: { type: Date, default: Date.now },
 });
-module.exports = mongoose.model("Checkin", checkinSchema);
+module.exports = mongoose.model("chekins", checkinSchema);

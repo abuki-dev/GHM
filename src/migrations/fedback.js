@@ -4,5 +4,5 @@ const feedbackSchema = new mongoose.Schema({
   title: { type: String, required: true },
   body: { type: String, required: true },
 });
-const Feedback = mongoose.model("feedback", feedbackSchema);
+const Feedback = mongoose.model("feedbacks", feedbackSchema);
 module.exports = Feedback;

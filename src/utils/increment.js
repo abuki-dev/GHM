@@ -11,7 +11,7 @@ const Counter =
 module.exports.incrementId = async function (doc, dbmodel) {
   if (doc.isNew) {
     try {
-      const prefix = dbmodel === "userId" ? "USR" : dbmodel.toUpperCase();
+      const prefix = dbmodel.replace("Id", "").toUpperCase();
       const counter = await Counter.findOneAndUpdate(
         { _id: dbmodel },
         { $inc: { sequence_value: 1 } },
@@ -20,7 +20,7 @@ module.exports.incrementId = async function (doc, dbmodel) {
           new: true,
         },
       );
-      // dbmodel = dbmodel.replace("Id", ""); // Remove "Id" from the model name
+      // dbmodel = ; // Remove "Id" from the model name
       // // Dynamically sets the id field (e.g., doc._id or doc.studentId)
       // doc[dbmodel] = `${dbmodel}-${counter.sequence_value}`;
 

@@ -31,4 +31,8 @@ const membershipPurchaseSchema = new mongoose.Schema({
 membershipPurchaseSchema.pre("save", async function () {
   await incrementId(this, "purchaseId");
 });
-module.exports = mongoose.model("MembershipPurchase", membershipPurchaseSchema);
+const MembershipPurchase = mongoose.model(
+  "membershippurchases",
+  membershipPurchaseSchema,
+);
+module.exports = MembershipPurchase;
