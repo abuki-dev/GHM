@@ -23,10 +23,8 @@ const usersSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   isActive: { type: Boolean, default: true },
 });
-usersSchema.pre("save", async function (next) {
-  if (this.isNew && !this.userId) {
-    await incrementId(this, "userId");
-  }
+usersSchema.pre("save", async function () {
+  await incrementId(this, "userId");
 });
 const Users = mongoose.model("users", usersSchema);
 module.exports = Users;

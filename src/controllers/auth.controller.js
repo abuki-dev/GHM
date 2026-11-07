@@ -1,16 +1,13 @@
 const bcrypt = require("bcryptjs");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 
-const { signToken } = require("../utils/token");
-const Users = require("../migrations/Users");
-const Trainer = require("../migrations/Trainer");
-const Member = require("../migrations/Member");
+const { signToken, cookieOptions } = require("../utils/token");
+const { Users, Trainer, Member } = require("../migrations");
 
 module.exports.register = async (req, res, next) => {
   try {
     const {
-      userId,
       full_name,
       email,
       password,
@@ -23,13 +20,12 @@ module.exports.register = async (req, res, next) => {
 
     const exstingUser = await Users.findOne({ email });
     if (exstingUser) {
-      return res.json({ message: "User already exists" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new Users({
-      userId: req.body.userId || (await incrementId("USR")),
       full_name,
       email,
       password: hashedPassword,
@@ -43,7 +39,6 @@ module.exports.register = async (req, res, next) => {
 
     if (role === "member" && extraDetails) {
       await Member.create({
-        memberId: newUser.userId,
         dateOfBirth: extraDetails.dateOfBirth,
         weight: extraDetails.weight,
         height: extraDetails.height,
@@ -52,7 +47,6 @@ module.exports.register = async (req, res, next) => {
 
     if (role === "trainer" && extraDetails) {
       await Trainer.create({
-        trainerId: newUser.userId,
         specialization: extraDetails.specialization,
         experience: extraDetails.experience,
         salary: extraDetails.salary,
@@ -60,7 +54,7 @@ module.exports.register = async (req, res, next) => {
       });
     }
 
-    return res.json({
+    return res.status(201).json({
       message: "User registered successfully",
       user: {
         userId: newUser.userId,
@@ -76,36 +70,25 @@ module.exports.register = async (req, res, next) => {
 
 module.exports.login = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array().map((err) => err.msg),
-      });
-    }
-
     const { email, password } = req.body;
     const user = await Users.findOne({ email });
-    if (!user) {
-      return res.json({ message: "Invalid Email or password" });
-    }
-    if (!user.isActive) {
-      return res.json({ message: "User account is inactive" });
-    }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.json({ message: "Invalid Email or password" });
+    if (!user || (await bcrypt.compare(password, user.password)) === false) {
+      return res.status(400).json({ message: "Invalid Email or password" });
     }
 
-    const token = jwt.sign(
-      { userId: user.userId, role: user.role },
-      process.env.JWT_SECRET || "your_secret_key",
-      { expiresIn: "1d" },
-    );
+    if (!user.isActive) {
+      return res
+        .status(400)
+        .json({ message: "User account is inactive contact support" });
+    }
+
+    const token = signToken(user);
+    res.cookie("token", token, cookieOptions);
     return res.json({
+      success: true,
       message: "Login successful",
-      token,
       user,
+      token,
     });
   } catch (error) {
     next(error);

@@ -8,3 +8,28 @@
 // 8 payments:id,member_id,amount_payed,plan_id,status(verfied,failed),date_issued,verfiyed_by
 // 9 Shifts:id,PlanID,Start_Time ,End_Time,trainerId ,max spots,Days_of The week,Name,Period
 // 10 feedbacks,id,title,body,user_id
+const Usres = require("../migrations/Users");
+const Trainer = require("../migrations/Trainer");
+const Member = require("../migrations/Member");
+const MembershipPlans = require("../migrations/MembershipPlans");
+const Checkins = require("../migrations/Checkins");
+const SubscriptionPurchases = require("../migrations/SubscriptionPurchases");
+const Sessions = require("../migrations/Sessions");
+const Payments = require("../migrations/Payments");
+const Shifts = require("../migrations/Shifts");
+const Feedbacks = require("../migrations/Feedbacks");
+const Training = require("../migrations/Training");
+
+module.exports = {
+  Users: Usres,
+  Trainer: Trainer,
+  Member: Member,
+  MembershipPlans: MembershipPlans,
+  Checkins: Checkins,
+  SubscriptionPurchases: SubscriptionPurchases,
+  Sessions: Sessions,
+  Payments: Payments,
+  Shifts: Shifts,
+  Feedbacks: Feedbacks,
+  Training: Training,
+};

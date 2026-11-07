@@ -1,6 +1,5 @@
 // Loads .env once and exports clean settings. Require this FIRST in every entry file.
 require("dotenv").config();
-
 const env = {
   NODE_ENV: process.env.NODE_ENV || "development",
   PORT: Number(process.env.PORT) || 3000,
@@ -16,7 +15,9 @@ if (!env.MONGODB_URI) {
 }
 
 if (!env.JWT_SECRET || env.JWT_SECRET.length < 32) {
-  throw new Error("JWT_SECRET is missing or too short (use 32+ characters). Check your .env file.");
+  throw new Error(
+    "JWT_SECRET is missing or too short (use 32+ characters). Check your .env file.",
+  );
 }
 
 module.exports = env;
