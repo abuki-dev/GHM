@@ -52,10 +52,11 @@ module.exports.getMembershipPlans = async (page = 1) => {
 
   return allPlans;
 };
-module.exports.getMemberSubscriptions = async (memberId) => {
+module.exports.getMemberSubscriptions = async ({ id }) => {
+  console.log("Getting subscriptions for userId:", id);
   const allPuschases = await MembershipPurchase.aggregate([
     { $sort: { member_id: 1 } },
-    { $match: { member_id: memberId } },
+    { $match: { member_id: id } },
     {
       $project: {
         _id: 0,
@@ -71,19 +72,21 @@ module.exports.getMemberSubscriptions = async (memberId) => {
 };
 module.exports.savePaymentInfos = async (
   { planId, amount, transactionId },
-  { userId },
+  { id },
 ) => {
   await Payments.create({
     planId,
     amount,
     transactionId,
-    userId,
+    userId: id,
   });
   return { message: `Sucussfully payed ${amount} for plan ${planId}` };
 };
-module.exports.getUsrePaymentHistory = async (userId) => {
+module.exports.getUsrePaymentHistory = async ({ id }) => {
+  console.log("Getting payment history for userId:", id);
   const histories = await Payments.aggregate([
     { $sort: { userId: 1, status: -1 } },
+    { $match: { userId: id } },
     {
       $lookup: {
         from: "membershipplans",

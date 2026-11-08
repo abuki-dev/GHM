@@ -1,6 +1,6 @@
 const express = require("express");
 const staffRouter = express.Router();
-const { requireRole } = require("../middlewares/auth");
+
 const {
   getPendingPayments,
   approvePayment,
@@ -13,11 +13,11 @@ const {
 const { register } = require("../controllers/auth.controller");
 
 staffRouter.post(
-  "/newaccount",
+  "/newmemberAccount",
   ValidateRegister,
   handleValidationErrors,
   register,
-);
+); // use the auth controller to register a new member account
 staffRouter.get("/payment", handleValidationErrors, getPendingPayments);
 staffRouter.post("/approvepayment", handleValidationErrors, approvePayment);
 staffRouter.post(

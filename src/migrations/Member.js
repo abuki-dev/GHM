@@ -1,11 +1,17 @@
 const mongoose = require("mongoose");
 const { incrementId } = require("../utils/increment.js");
 const memberSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+    ref: "users",
+    index: true,
+    unique: true,
+  },
   memberId: {
     type: String,
     required: true,
     unique: true,
-    ref: "users",
     index: true,
   },
   dateOfBirth: { type: Date, required: true },
