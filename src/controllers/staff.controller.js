@@ -1,6 +1,6 @@
 const { Payment, Member } = require("../migrations");
 
-module.exports.SubscribeToMembership = async (req, res) => {
+module.exports.SubscribeToMembership = async (req, res, next) => {
   try {
     const { userId, title, duration, amount } = req.body;
 
@@ -30,11 +30,11 @@ module.exports.SubscribeToMembership = async (req, res) => {
       subscription: member.subscriptions[member.subscriptions.length - 1],
     });
   } catch (error) {
-    res.json({ success: false, error: error.message });
+    next(error);
   }
 };
 
-module.exports.approvePayment = async (req, res) => {
+module.exports.approvePayment = async (req, res, next) => {
   try {
     const { paymentId } = req.body;
     const payment = await Payment.findOne({ paymentId });
@@ -42,18 +42,19 @@ module.exports.approvePayment = async (req, res) => {
       return res.status(404).json({ message: "Payment not found" });
     }
     payment.status = "approved";
+    payment.verifiedBy = req.user.userId;
     await payment.save();
     res.json({ message: "Payment approved successfully", payment });
   } catch (error) {
-    res.json({ message: "Error approving payment", error });
+    next(error);
   }
 };
 
-module.exports.getPendingPayments = async (req, res) => {
+module.exports.getPendingPayments = async (req, res, next) => {
   try {
     const pendingPayments = await Payment.find({ status: "pending" });
     res.json({ pendingPayments });
   } catch (error) {
-    res.json({ message: "Error fetching pending payments", error });
+    next(error);
   }
 };
