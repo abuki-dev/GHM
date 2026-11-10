@@ -1,4 +1,5 @@
 const { Payments, Member } = require("../migrations");
+const {decline} = require("../services/staff.service");
 
 module.exports.approvePayment = async (req, res, next) => {
   try {
@@ -11,24 +12,20 @@ module.exports.approvePayment = async (req, res, next) => {
     payment.verifiedBy = req.user.userId;
     await payment.save();
 
+
+
+
+
     res.json({ message: `payment verified Sucssfuly`, payment });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.declinePaymnet = async (req, res, next) => {
+module.exports.declinePayment = async (req, res, next) => {
   try {
-    const { paymentId } = req.body;
-    const payment = await Payments.findOne({ paymentId });
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-    payment.status = "failed";
-    payment.verifiedBy = req.user.userId;
-    await payment.save();
-
-    res.json({ message: `payment Declined Sucssfuly`, payment });
+    await decline(req.body);
+    res.json({ message: `payment Declined sucussfully`, payment });
   } catch (error) {
     next(error);
   }
