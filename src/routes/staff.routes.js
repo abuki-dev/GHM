@@ -20,10 +20,5 @@ staffRouter.post(
 ); // use the auth controller to register a new member account
 staffRouter.get("/payment", handleValidationErrors, getPendingPayments);
 staffRouter.post("/approvepayment", handleValidationErrors, approvePayment);
-staffRouter.post(
-  "/subscribemembership",
-  SubscribeToMembership,
-  handleValidationErrors,
-);
 
 module.exports = staffRouter;
