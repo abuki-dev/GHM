@@ -22,6 +22,9 @@ module.exports.incrementId = async function (doc, dbmodel) {
           returnDocument: "after", // Fixes the deprecation warning (replaces new: true)
         },
       );
+      if (!counter) {
+        Counter.create({ _id: dbmodel, sequence_value: 1 });
+      }
       const paddedSeq = String(counter.sequence_value).padStart(3, "0");
       doc[dbmodel] = `${prefix}-${paddedSeq}`;
     } catch (error) {
