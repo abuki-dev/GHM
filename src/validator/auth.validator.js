@@ -1,4 +1,4 @@
-const { body ,validationResult} = require("express-validator");
+const { body, validationResult } = require("express-validator");
 
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
@@ -7,7 +7,6 @@ const handleValidationErrors = (req, res, next) => {
   }
   next();
 };
-
 
 const ValidateRegister = [
   body("full_name")
@@ -45,14 +44,6 @@ const ValidateRegister = [
       }
       return true;
     }),
-
-  body("role")
-    .trim()
-    .notEmpty()
-    .withMessage("Role is required")
-    .isIn(["admin", "staff", "trainer", "member"])
-    .withMessage("Invalid role"),
-
   body("phone")
     .trim() // 1. Clean spaces at ends
     .blacklist(" ()-") // 2. STRIP symbols out first!
@@ -60,6 +51,30 @@ const ValidateRegister = [
     .withMessage("Phone number is required")
     .isMobilePhone("any") // 4. Validate the cleanly stripped string
     .withMessage("Invalid phone number format"), // 5. Error binds to isMobilePhone
+];
+const ValidateRole = [
+  body("role")
+    .trim()
+    .notEmpty()
+    .withMessage("Role is required")
+    .isIn(["staff", "trainer", "member"])
+    .withMessage("Invalid role"),
+];
+const validatemembrData = [
+  body("weight")
+    .trim()
+    .isNumeric()
+    .withMessage("Weight can only be numeric value"),
+
+  body("height")
+    .trim()
+    .isNumeric()
+    .withMessage("Height can only be numeric value"),
+
+  body("dateOfBirth")
+    .trim()
+    .isISO8601()
+    .withMessage("Date of birth must be a valid date (YYYY-MM-DD)"),
 ];
 
 const validateLogin = [
@@ -77,4 +92,6 @@ module.exports = {
   ValidateRegister,
   validateLogin,
   handleValidationErrors,
+  validatemembrData,
+  ValidateRole,
 };

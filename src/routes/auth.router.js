@@ -7,11 +7,13 @@ const {
   ValidateRegister,
   validateLogin,
   handleValidationErrors,
+  validatemembrData,
 } = require("../validator/auth.validator");
 
 authRouter.post(
   "/register",
   ValidateRegister,
+  validatemembrData,
   handleValidationErrors,
   register,
 );
