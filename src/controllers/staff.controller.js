@@ -1,50 +1,34 @@
-const { Payment, Member } = require("../migrations");
+const { Payments, Member } = require("../migrations");
 
-module.exports.SubscribeToMembership = async (req, res, next) => {
+module.exports.approvePayment = async (req, res, next) => {
   try {
-    const { userId, title, duration, amount } = req.body;
-
-    const member = await Member.findOne({ memberId: userId });
-    if (!member) {
-      return res.json({ message: "Member profile not found." });
+    const { paymentId } = req.body;
+    const payment = await Payments.findOne({ paymentId });
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
     }
+    payment.status = "verified";
+    payment.verifiedBy = req.user.userId;
+    await payment.save();
 
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setMonth(endDate.getMonth() + (duration || 1));
-
-    member.subscriptions = member.subscriptions || [];
-    member.subscriptions.push({
-      title,
-      startDate,
-      endDate,
-      amount,
-      status: "pending",
-    });
-
-    await member.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Subscription assigned successfully. Awaiting payment approval.",
-      subscription: member.subscriptions[member.subscriptions.length - 1],
-    });
+    res.json({ message: `payment verified Sucssfuly`, payment });
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.approvePayment = async (req, res, next) => {
+module.exports.declinePaymnet = async (req, res, next) => {
   try {
     const { paymentId } = req.body;
-    const payment = await Payment.findOne({ paymentId });
+    const payment = await Payments.findOne({ paymentId });
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" });
     }
-    payment.status = "approved";
+    payment.status = "failed";
     payment.verifiedBy = req.user.userId;
     await payment.save();
-    res.json({ message: "Payment approved successfully", payment });
+
+    res.json({ message: `payment Declined Sucssfuly`, payment });
   } catch (error) {
     next(error);
   }
@@ -52,7 +36,7 @@ module.exports.approvePayment = async (req, res, next) => {
 
 module.exports.getPendingPayments = async (req, res, next) => {
   try {
-    const pendingPayments = await Payment.find({ status: "pending" });
+    const pendingPayments = await Payments.find({ status: "pending" });
     res.json({ pendingPayments });
   } catch (error) {
     next(error);

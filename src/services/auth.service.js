@@ -14,11 +14,6 @@ module.exports.insertUser = async ({
   height,
   dateOfBirth,
 }) => {
-  if (!height || !weight || !dateOfBirth) {
-    throw new ConflictError(
-      "Please provide height, weight and date of birth for member registration",
-    );
-  }
   const existingUser = await Users.findOne({ email });
   if (existingUser) {
     throw new ConflictError("User already exists");
@@ -42,7 +37,21 @@ module.exports.insertUser = async ({
 
   return user;
 };
-
+module.exports.createStandard = async ({
+  full_name,
+  email,
+  password,
+  gender,
+  age,
+  phone,
+  role,
+  specialization,
+  experience,
+  salary,
+  hireDate,
+}) => {
+  // createe trainer or staff
+};
 module.exports.loginUser = async ({ email, password }) => {
   // 2. Fetch user by email (include password explicitly if schema has select: false)
   const user = await Users.findOne({ email }).select("+password");
