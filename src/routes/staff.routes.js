@@ -20,13 +20,10 @@ staffRouter.post(
   handleValidationErrors,
   register,
 ); // use the auth controller to register a new member account
-<<<<<<< HEAD
 staffRouter.get("/payment", handleValidationErrors, getPendingPayments);
 staffRouter.post("/approvepayment", handleValidationErrors, approvePayment);
-=======
 staffRouter.get("/payment", getPendingPayments);
 staffRouter.post("/approvepayment", approvePayment);
 staffRouter.post("/declinePayment", declinePaymnet);
->>>>>>> refs/remotes/origin/main
 
 module.exports = staffRouter;
