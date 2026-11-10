@@ -76,7 +76,7 @@ const validatemembrData = [
     .isISO8601()
     .withMessage("Date of birth must be a valid date (YYYY-MM-DD)"),
 ];
-
+const valdatextraData = []
 const validateLogin = [
   body("email")
     .trim()
@@ -94,4 +94,5 @@ module.exports = {
   handleValidationErrors,
   validatemembrData,
   ValidateRole,
+  valdatextraData
 };

@@ -5,14 +5,14 @@ const { register } = require("../controllers/auth.controller");
 const {
   ValidateRegister,
   handleValidationErrors,
-  ValidateRole,
+  ValidateRole, valdatextraData,
 } = require("../validator/auth.validator");
 
 adminRoutes.post(
   "/createstandarduser",
   ValidateRegister,
   ValidateRole,
-
+ valdatextraData,
   handleValidationErrors,
   cretaeNewaccount,
 );

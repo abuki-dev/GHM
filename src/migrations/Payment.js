@@ -10,7 +10,7 @@ const paymentSchema = new mongoose.Schema({
     enum: ["verified", "pending", "failed"],
   },
   verifiedBy: { type: String, ref: "users", index: true },
-  date: { type: Date, default: Date.now },
+  date: { type: Date, default: Date.now ,index:true},
 });
 paymentSchema.index({ userId: 1, status: 1 });
 const Payment = mongoose.model("payments", paymentSchema);
