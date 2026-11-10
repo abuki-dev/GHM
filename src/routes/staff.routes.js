@@ -4,7 +4,7 @@ const staffRouter = express.Router();
 const {
   getPendingPayments,
   approvePayment,
-  declinePaymnet,
+  declinePayment,
 } = require("../controllers/staff.controller");
 const {
   handleValidationErrors,
@@ -20,13 +20,9 @@ staffRouter.post(
   handleValidationErrors,
   register,
 ); // use the auth controller to register a new member account
-<<<<<<< HEAD
-staffRouter.get("/payment", handleValidationErrors, getPendingPayments);
-staffRouter.post("/approvepayment", handleValidationErrors, approvePayment);
-=======
-staffRouter.get("/payment", getPendingPayments);
+
+staffRouter.get("/payments", getPendingPayments);
 staffRouter.post("/approvepayment", approvePayment);
-staffRouter.post("/declinePayment", declinePaymnet);
->>>>>>> refs/remotes/origin/main
+staffRouter.post("/declinePayment", declinePayment);
 
 module.exports = staffRouter;

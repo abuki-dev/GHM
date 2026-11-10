@@ -1,5 +1,5 @@
-const { Payments, Member } = require("../migrations");
-const {decline} = require("../services/staff.service");
+const { Payments } = require("../migrations");
+const { decline, sendPayments } = require("../services");
 
 module.exports.approvePayment = async (req, res, next) => {
   try {
@@ -12,10 +12,6 @@ module.exports.approvePayment = async (req, res, next) => {
     payment.verifiedBy = req.user.userId;
     await payment.save();
 
-
-
-
-
     res.json({ message: `payment verified Sucssfuly`, payment });
   } catch (error) {
     next(error);
@@ -24,7 +20,7 @@ module.exports.approvePayment = async (req, res, next) => {
 
 module.exports.declinePayment = async (req, res, next) => {
   try {
-    await decline(req.body);
+    const payment = await decline(req.body, req.user);
     res.json({ message: `payment Declined sucussfully`, payment });
   } catch (error) {
     next(error);
@@ -33,7 +29,7 @@ module.exports.declinePayment = async (req, res, next) => {
 
 module.exports.getPendingPayments = async (req, res, next) => {
   try {
-    const pendingPayments = await Payments.find({ status: "pending" });
+    const pendingPayments = await sendPayments(req.query.page);
     res.json({ pendingPayments });
   } catch (error) {
     next(error);

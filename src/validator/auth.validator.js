@@ -76,7 +76,21 @@ const validatemembrData = [
     .isISO8601()
     .withMessage("Date of birth must be a valid date (YYYY-MM-DD)"),
 ];
-const valdatextraData = []
+const valdatextraData = [
+  body("specialization")
+    .trim()
+    .notEmpty()
+    .withMessage("Specialization is required"),
+  body("experience")
+    .trim()
+    .isNumeric()
+    .withMessage("Experience can only be numeric value"),
+  body("hireDate").trim().isISO8601(),
+  body("salary")
+    .trim()
+    .isNumeric()
+    .withMessage("Salary can only be numeric value"),
+];
 const validateLogin = [
   body("email")
     .trim()
@@ -94,5 +108,5 @@ module.exports = {
   handleValidationErrors,
   validatemembrData,
   ValidateRole,
-  valdatextraData
+  valdatextraData,
 };
