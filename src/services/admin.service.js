@@ -45,7 +45,7 @@ module.exports.removeshift = async function ({ shiftId }) {
   return deleted;
 };
 module.exports.removetraining = async function ({ trainingId }) {
-  const training = await training.findOneAndDelete({ trainingId });
+  const training = await Training.findOneAndDelete({ trainingId });
 
   if (!training) {
     throw new BadRequestError("training Program Not Found");
@@ -80,7 +80,7 @@ module.exports.newMembershipPlan = async ({
 
   return newPlan;
 };
-module.exports.removePlan = async function ({ shiftId }) {
+module.exports.removePlan = async function ({ planId }) {
   const deletePlan = await MembershipPlans.deleteOne({ planId });
   return deletePlan;
 };
