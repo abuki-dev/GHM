@@ -17,4 +17,5 @@ module.exports = {
   decline,
   createStandard,
   sendPayments,
+  newtraining: require("./admin.service").newtraining,
 };
