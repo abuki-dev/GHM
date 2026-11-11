@@ -50,7 +50,7 @@ const ValidateRegister = [
     .notEmpty() // 3. Ensure it's not blank now
     .withMessage("Phone number is required")
     .isMobilePhone("any") // 4. Validate the cleanly stripped string
-    .withMessage("Invalid phone number format"), // 5. Error binds to isMobilePhone
+    .withMessage("Invalid phone number format"),
 ];
 const ValidateRole = [
   body("role")
