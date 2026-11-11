@@ -1,18 +1,21 @@
 const adminRoutes = require("express").Router();
-const { cretaeNewaccount } = require("../controllers/admin.controller");
-const { register } = require("../controllers/auth.controller");
+const {
+  register,
+  cretaeNewaccount,
+} = require("../controllers/auth.controller");
 
 const {
   ValidateRegister,
   handleValidationErrors,
-  ValidateRole, valdatextraData,
+  ValidateRole,
+  valdatextraData,
 } = require("../validator/auth.validator");
 
 adminRoutes.post(
   "/createstandarduser",
   ValidateRegister,
   ValidateRole,
- valdatextraData,
+  valdatextraData,
   handleValidationErrors,
   cretaeNewaccount,
 );
@@ -23,3 +26,4 @@ adminRoutes.post(
   handleValidationErrors,
   register,
 );
+module.exports = adminRoutes;

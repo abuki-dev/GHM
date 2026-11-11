@@ -1,6 +1,10 @@
 const { hash, compare } = require("bcryptjs");
-const { Users, Member } = require("../migrations");
-const { UnauthorizedError, ConflictError } = require("../utils/app.errors");
+const { Users, Member, Trainer, Staff } = require("../migrations");
+const {
+  UnauthorizedError,
+  ConflictError,
+  BadRequestError,
+} = require("../utils/app.errors");
 const { signToken } = require("../utils/token");
 
 module.exports.insertUser = async ({
@@ -51,6 +55,48 @@ module.exports.createStandard = async ({
   hireDate,
 }) => {
   // createe trainer or staff
+  const isExist = await Users.findOne({ email });
+  console.log(isExist);
+  if (isExist) {
+    throw new ConflictError("Email alredy in use by other person ");
+  }
+  const hassedpassword = await hash(password, 10);
+  const user = await Users.create({
+    full_name,
+    email,
+    gender,
+    age,
+    phone,
+    role,
+    password: hassedpassword,
+  });
+
+  // let us chek teh role if staff or trainer
+  // teh we create for ecah
+  if (role === "trainer") {
+    await Trainer.create({
+      userId: user.userId,
+      specialization,
+      salary,
+      experience,
+      hireDate,
+    });
+
+    return user;
+  }
+  // else jsust cerae staff
+  if (role === "staff") {
+    await Staff.create({
+      userId: user.userId,
+      specialization,
+      salary,
+      experience,
+      hireDate,
+    });
+    return user;
+  }
+
+  throw new BadRequestError("Invalid role assigniation or account creation");
 };
 module.exports.loginUser = async ({ email, password }) => {
   // 2. Fetch user by email (include password explicitly if schema has select: false)

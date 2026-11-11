@@ -19,6 +19,7 @@ const Payments = require("./Payment");
 const Shifts = require("./Shift");
 const Feedbacks = require("./fedback");
 const Training = require("./Training");
+const Staff = require("./staff");
 
 module.exports = {
   Users: Usres,
@@ -32,4 +33,5 @@ module.exports = {
   Shifts: Shifts,
   Feedbacks: Feedbacks,
   Training: Training,
+  Staff: Staff,
 };

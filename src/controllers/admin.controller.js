@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 //create every accoutn memebr staff admin trainer subscriotion plan shift traning purchase
 
 //cretae account
@@ -8,3 +9,5 @@ module.exports.cretaeNewaccount = async (req, res, next) => {
   try {   
   } catch (error) {}
 };
+=======
+>>>>>>> refs/remotes/origin/main
