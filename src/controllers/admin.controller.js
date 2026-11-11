@@ -5,6 +5,7 @@ const {
   removetraining,
   newMembershipPlan,
 } = require("../services");
+const { removePlan } = require("../services/admin.service");
 
 module.exports.createTraining = async (req, res, next) => {
   try {
@@ -30,6 +31,19 @@ module.exports.createMembershipPlan = async (req, res, next) => {
     res
       .status(201)
       .json({ message: "MembershipPlan created successfully", membershipPlan });
+  } catch (err) {
+    next(err);
+  }
+};
+module.exports.deleteMembershipPlan = async (req, res, next) => {
+  try {
+    const removeMembershipPlan = await removePlan(req.body);
+    res
+      .status(200)
+      .json({
+        message: "membership Plan deleted successfully",
+        removeMembershipPlan,
+      });
   } catch (err) {
     next(err);
   }
