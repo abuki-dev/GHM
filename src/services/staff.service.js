@@ -1,4 +1,5 @@
 const { Payments, Member } = require("../migrations");
+const MembershipPurchase = require("../migrations/MemberShip_Purchase");
 const { BadRequestError } = require("../utils/app.errors");
 
 module.exports.approve = async ({ paymentId }, { id }) => {
@@ -9,11 +10,13 @@ module.exports.approve = async ({ paymentId }, { id }) => {
   payment.status = "verified";
   payment.verifiedBy = id;
   await payment.save();
- 
 
   const member = await Member.findOne({
-     memberId: payment.userId 
+    memberId: payment.userId,
   });
+
+  let startDate = new Date();
+  let endDate= new Date();
 
   //member_id panid start end payment_id
   if (member) {
@@ -24,14 +27,22 @@ module.exports.approve = async ({ paymentId }, { id }) => {
 
     if (pendingSub) {
       pendingSub.status = "active";
+      startDate = pendingSub.start_date || startDate;
+      endDate = pendingSub.end_date || endDate;
     } else {
-      const startDate = new Date();
-      const endDate = new Date();
       endDate.setMonth(endDate.getMonth() + (payment.duration || 1));
     }
     await member.save();
   }
-  return payment;
+ const membershipPurchase = await MembershipPurchase.create({
+  member_id: payment.member_id,
+  membership_plan_id: payment.planId,
+  payment_id: payment.paymentId,
+  start_date: startDate,
+  end_date: endDate,
+  status: "active",
+ });
+ return {payment, membershipPurchase};
 };
 module.exports.decline = async ({ paymentId }, { id }) => {
   const payment = await Payments.findOne({ paymentId });
@@ -41,6 +52,17 @@ module.exports.decline = async ({ paymentId }, { id }) => {
   payment.status = "failed";
   payment.verifiedBy = id;
   await payment.save();
+
+  const member = await Member.findOne({
+    memberId: payment.userId
+  });
+  if (member && member.subscriptions) {
+    const pendingSub = member.subscriptions.find((sub)=> sub.status ==="pending");
+    if(pendingSub){
+      pendingSub.status="failed";
+      await memeber.save();
+    }
+  }
   return payment;
 };
 module.exports.sendPayments = async (page = 1) => {
