@@ -10,6 +10,7 @@ const {
   ValidateRole,
   valdatextraData,
 } = require("../validator/auth.validator");
+const { trainingValidator } = require("../validator/training.validator");
 
 adminRoutes.post(
   "/createstandarduser",
@@ -26,4 +27,9 @@ adminRoutes.post(
   handleValidationErrors,
   register,
 );
+adminRoutes.post(
+  "/createtraning",
+  trainingValidator,
+  newTraining
+)
 module.exports = adminRoutes;
