@@ -1,5 +1,5 @@
 const { Training, Shifts, MembershipPlans, Trainer } = require("../migrations");
-const { BadRequestError, ConflictError } = require("../utils/app.errors");
+const { BadRequestError } = require("../utils/app.errors");
 
 module.exports.newtraining = async function ({
   title,
