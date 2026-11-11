@@ -1,5 +1,5 @@
-const { Training, Shifts, MembershipPlans } = require("../migrations");
-const { BadRequestError } = require("../utils/app.errors");
+const { Training, Shifts, MembershipPlans, Trainer } = require("../migrations");
+const { BadRequestError, ConflictError } = require("../utils/app.errors");
 
 module.exports.newtraining = async function ({
   title,
@@ -28,7 +28,10 @@ module.exports.newshift = async function ({
   if (!startTime || !endTime || endTime < startTime) {
     throw new BadRequestError("Time is out of range or ");
   }
-
+  const istrainerexist = await Trainer.findOne({ trainerId });
+  if (!istrainerexist) {
+    throw new BadRequestError("Trainer Id is invalid try agan ");
+  }
   const shift = await Shifts.create({
     trainerId: trainerId,
     group: group,
@@ -45,7 +48,7 @@ module.exports.removeshift = async function ({ shiftId }) {
   return deleted;
 };
 module.exports.removetraining = async function ({ trainingId }) {
-  const training = await training.findOneAndDelete({ trainingId });
+  const training = await Training.findOneAndDelete({ trainingId });
 
   if (!training) {
     throw new BadRequestError("training Program Not Found");
@@ -63,8 +66,15 @@ module.exports.newMembershipPlan = async ({
 }) => {
   const existingPlan = await MembershipPlans.findOne({ Title });
   if (existingPlan) {
-    throw new BadRequestError(
+    throw new ConflictError(
       "A membership plan with this title already exists.",
+    );
+  }
+  const trainigfound = await Training.findOne({ trainingId: training_id });
+  const shiftfound = await Shifts.findOne({ shiftId: shiftId });
+  if (!trainigfound || !shiftfound) {
+    throw new BadRequestError(
+      "Training program not found or Shift not founded.",
     );
   }
 
