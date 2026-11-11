@@ -28,6 +28,8 @@ module.exports.sendPayments = async (page = 1) => {
         amount: 1,
         status: 1,
         verifiedBy: 1,
+        transactionId: 1,
+        date: 1,
       },
     },
   ]);
