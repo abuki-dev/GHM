@@ -19,8 +19,9 @@ module.exports.createTraining = async (req, res, next) => {
 };
 module.exports.deleteTraining = async (req, res, next) => {
   try {
-    await removetraining(req.body);
-    res.status(200).json({ message: "training deleted successfully" });
+    const { trainingId } = req.params;
+    const result = await removetraining({ trainingId });
+    res.status(200).json({ message: "training deleted successfully" }, result);
   } catch (err) {
     next(err);
   }
@@ -37,13 +38,12 @@ module.exports.createMembershipPlan = async (req, res, next) => {
 };
 module.exports.deleteMembershipPlan = async (req, res, next) => {
   try {
+    const { planId } = req.params;
     const removeMembershipPlan = await removePlan(req.body);
-    res
-      .status(200)
-      .json({
-        message: "membership Plan deleted successfully",
-        removeMembershipPlan,
-      });
+    res.status(200).json({
+      message: "membership Plan deleted successfully",
+      removeMembershipPlan,
+    });
   } catch (err) {
     next(err);
   }
