@@ -16,7 +16,7 @@ module.exports.approve = async ({ paymentId }, { id }) => {
   });
 
   let startDate = new Date();
-  let endDate= new Date();
+  let endDate = new Date();
 
   //member_id panid start end payment_id
   if (member) {
@@ -34,15 +34,15 @@ module.exports.approve = async ({ paymentId }, { id }) => {
     }
     await member.save();
   }
- const membershipPurchase = await MembershipPurchase.create({
-  member_id: payment.member_id,
-  membership_plan_id: payment.planId,
-  payment_id: payment.paymentId,
-  start_date: startDate,
-  end_date: endDate,
-  status: "active",
- });
- return {payment, membershipPurchase};
+  const membershipPurchase = await MembershipPurchase.create({
+    member_id: payment.userId || payment.member_id,
+    membership_plan_id: payment.planId || payment.membership_plan_id,
+    payment_id: payment.paymentId,
+    start_date: startDate,
+    end_date: endDate,
+    status: "active",
+  });
+  return { payment, membershipPurchase };
 };
 module.exports.decline = async ({ paymentId }, { id }) => {
   const payment = await Payments.findOne({ paymentId });
@@ -54,12 +54,14 @@ module.exports.decline = async ({ paymentId }, { id }) => {
   await payment.save();
 
   const member = await Member.findOne({
-    memberId: payment.userId
+    memberId: payment.userId,
   });
   if (member && member.subscriptions) {
-    const pendingSub = member.subscriptions.find((sub)=> sub.status ==="pending");
-    if(pendingSub){
-      pendingSub.status="failed";
+    const pendingSub = member.subscriptions.find(
+      (sub) => sub.status === "pending",
+    );
+    if (pendingSub) {
+      pendingSub.status = "failed";
       await memeber.save();
     }
   }
