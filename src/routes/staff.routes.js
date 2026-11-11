@@ -23,7 +23,6 @@ staffRouter.post(
 staffRouter.get("/payment", getPendingPayments);
 staffRouter.post("/approvepayment", approvePayment);
 staffRouter.get("/payment", getPendingPayments);
-staffRouter.post("/approvepayment", approvePayment);
 staffRouter.post("/declinePayment", declinePayment);
 
 module.exports = staffRouter;
