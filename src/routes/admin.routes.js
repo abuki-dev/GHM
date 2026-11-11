@@ -7,8 +7,6 @@ const {
 const {
   register,
   cretaeNewaccount,
-  register,
-  cretaeNewaccount,
 } = require("../controllers/auth.controller");
 
 const {
@@ -16,10 +14,7 @@ const {
   handleValidationErrors,
   ValidateRole,
   valdatextraData,
-  ValidateRegister,
-  handleValidationErrors,
-  ValidateRole,
-  valdatextraData,
+
 } = require("../validator/auth.validator");
 const { trainingValidator, validateMembershipPlan } = require("../validator/training.validator");
 
@@ -30,19 +25,8 @@ adminRoutes.post(
   valdatextraData,
   handleValidationErrors,
   cretaeNewaccount,
-  "/createstandarduser",
-  ValidateRegister,
-  ValidateRole,
-  valdatextraData,
-  handleValidationErrors,
-  cretaeNewaccount,
 );
 adminRoutes.post(
-  "/createmember",
-  ValidateRegister,
-  ValidateRole,
-  handleValidationErrors,
-  register,
   "/createmember",
   ValidateRegister,
   ValidateRole,
