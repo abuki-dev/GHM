@@ -1,4 +1,4 @@
-
+const body = require("express-validator");
 const trainingValidator = [
   body("title")
     .trim()
@@ -16,7 +16,7 @@ const trainingValidator = [
     .withMessage("catagory must contain only letters and spaces")
     .escape(),
 
-    body("description")
+  body("description")
     .trim()
     .notEmpty()
     .withMessage("description is request")
@@ -24,6 +24,27 @@ const trainingValidator = [
     .withMessage("description must contain only letters and spaces")
     .escape(),
 ];
-module.exports= {
-  trainingValidator
-}
+
+const validateMembershipPlan = [
+  body("Title").trim().notEmpty().withMessage("Title is required"),
+
+  body("description").trim().notEmpty().withMessage("Description is required"),
+
+  body("duration_days")
+    .notEmpty()
+    .withMessage("Duration in days is required")
+    .isNumeric()
+    .withMessage("Duration days must be a number"),
+
+  body("price")
+    .notEmpty()
+    .withMessage("Price is required")
+    .isNumeric()
+    .withMessage("Price must be a number")
+    .isFloat({ min: 0 })
+    .withMessage("Price cannot be negative"),
+];
+module.exports = {
+  trainingValidator,
+  validateMembershipPlan,
+};
