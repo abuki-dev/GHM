@@ -7,9 +7,15 @@ const {
 const {
   register,
   cretaeNewaccount,
+  register,
+  cretaeNewaccount,
 } = require("../controllers/auth.controller");
 
 const {
+  ValidateRegister,
+  handleValidationErrors,
+  ValidateRole,
+  valdatextraData,
   ValidateRegister,
   handleValidationErrors,
   ValidateRole,
@@ -24,8 +30,19 @@ adminRoutes.post(
   valdatextraData,
   handleValidationErrors,
   cretaeNewaccount,
+  "/createstandarduser",
+  ValidateRegister,
+  ValidateRole,
+  valdatextraData,
+  handleValidationErrors,
+  cretaeNewaccount,
 );
 adminRoutes.post(
+  "/createmember",
+  ValidateRegister,
+  ValidateRole,
+  handleValidationErrors,
+  register,
   "/createmember",
   ValidateRegister,
   ValidateRole,
