@@ -20,8 +20,8 @@ staffRouter.post(
   handleValidationErrors,
   register,
 ); // use the auth controller to register a new member account
-staffRouter.get("/payment", handleValidationErrors, getPendingPayments);
-staffRouter.post("/approvepayment", handleValidationErrors, approvePayment);
+staffRouter.get("/payment", getPendingPayments);
+staffRouter.post("/approvepayment", approvePayment);
 staffRouter.get("/payment", getPendingPayments);
 staffRouter.post("/approvepayment", approvePayment);
 staffRouter.post("/declinePayment", declinePayment);
