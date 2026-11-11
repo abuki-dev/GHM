@@ -4,7 +4,7 @@ const trainingValidator = [
     .trim()
     .notEmpty()
     .withMessage("title is request")
-    .isAlpha("en-US", { ignore: " " })
+    .isAlpha("en-US", { ignore: " 0123456789-'&.," })
     .withMessage("title must contain only letters and spaces")
     .escape(),
 
@@ -12,7 +12,7 @@ const trainingValidator = [
     .trim()
     .notEmpty()
     .withMessage("catagory is request")
-    .isAlpha("en-US")
+    .isAlpha("en-US", { ignore: " 0123456789-'&." })
     .withMessage("catagory must contain only letters and spaces")
     .escape(),
 
@@ -20,7 +20,7 @@ const trainingValidator = [
     .trim()
     .notEmpty()
     .withMessage("description is request")
-    .isAlpha("en-US", { ignore: " " })
+    .isAlpha("en-US", { ignore: " 01234567894-'&.," })
     .withMessage("description must contain only letters and spaces")
     .escape(),
 ];

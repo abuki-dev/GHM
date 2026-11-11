@@ -36,7 +36,7 @@ adminRoutes.post(
 );
 adminRoutes.post(
   "/createtraning",
-  trainingValidator,
+  trainingValidator, //[0,1,2]
   handleValidationErrors,
   createTraining,
 );
@@ -45,7 +45,8 @@ adminRoutes.delete("/deletePlan/:planId", deleteMembershipPlan);
 adminRoutes.post("/createshift", createShifts);
 adminRoutes.post(
   "/createMembershipPlan",
-  trainingValidator,
+  trainingValidator[0],
+  trainingValidator[2],
   handleValidationErrors,
   createMembershipPlan,
 );

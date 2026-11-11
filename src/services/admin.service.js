@@ -56,7 +56,7 @@ module.exports.removetraining = async function ({ trainingId }) {
   return { message: "training created successsfully", training };
 };
 module.exports.newMembershipPlan = async ({
-  Title,
+  title,
   description,
   duration_days,
   tier,
@@ -64,12 +64,6 @@ module.exports.newMembershipPlan = async ({
   training_id,
   shiftId,
 }) => {
-  const existingPlan = await MembershipPlans.findOne({ Title });
-  if (existingPlan) {
-    throw new ConflictError(
-      "A membership plan with this title already exists.",
-    );
-  }
   const trainigfound = await Training.findOne({ trainingId: training_id });
   const shiftfound = await Shifts.findOne({ shiftId: shiftId });
   if (!trainigfound || !shiftfound) {
@@ -79,7 +73,7 @@ module.exports.newMembershipPlan = async ({
   }
 
   const newPlan = await MembershipPlans.create({
-    Title,
+    title,
     description,
     duration_days,
     tier,
@@ -90,7 +84,7 @@ module.exports.newMembershipPlan = async ({
 
   return newPlan;
 };
-module.exports.removePlan = async function ({ shiftId }) {
+module.exports.removePlan = async function ({ planId }) {
   const deletePlan = await MembershipPlans.deleteOne({ planId });
   return deletePlan;
 };
