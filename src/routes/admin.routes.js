@@ -1,35 +1,33 @@
 const adminRoutes = require("express").Router();
 const {
-    register,
-    cretaeNewaccount,
+  register,
+  cretaeNewaccount,
 } = require("../controllers/auth.controller");
 
 const {
-    ValidateRegister,
-    handleValidationErrors,
-    ValidateRole,
-    valdatextraData,
+  ValidateRegister,
+  handleValidationErrors,
+  ValidateRole,
+  valdatextraData,
 } = require("../validator/auth.validator");
 
-const {trainingValidator} = require("../validator/training.validator");
-const {createTraining, createShifts} = require("../controllers/admin.controller");
+const { trainingValidator } = require("../validator/training.validator");
 
 adminRoutes.post(
-    "/createstandarduser",
-    ValidateRegister,
-    ValidateRole,
-    valdatextraData,
-    handleValidationErrors,
-    cretaeNewaccount,
+  "/createstandarduser",
+  ValidateRegister,
+  ValidateRole,
+  valdatextraData,
+  handleValidationErrors,
+  cretaeNewaccount,
 );
 adminRoutes.post(
-    "/createmember",
-    ValidateRegister,
-    ValidateRole,
-    handleValidationErrors,
-    register,
+  "/createmember",
+  ValidateRegister,
+  ValidateRole,
+  handleValidationErrors,
+  register,
 );
 
-adminRoutes.post("/createtraning", trainingValidator, createTraining);
-adminRoutes.post("/createshift", createShifts);
+adminRoutes.post("/createtraning", trainingValidator, newTraining);
 module.exports = adminRoutes;

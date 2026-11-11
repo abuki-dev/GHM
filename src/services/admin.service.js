@@ -1,5 +1,6 @@
-const { Training, Shifts } = require("../migrations");
+const { Training, Shifts, MembershipPlans } = require("../migrations");
 const { BadRequestError } = require("../utils/app.errors");
+
 module.exports.newtraining = async function ({
   title,
   description,
@@ -14,7 +15,7 @@ module.exports.newtraining = async function ({
   });
   return training;
 };
-module.exports.removetraining = async function ({ trainingId }) {};
+
 module.exports.newshift = async function ({
   trainerId,
   group,
@@ -42,4 +43,40 @@ module.exports.newshift = async function ({
 module.exports.removeshift = async function ({ shiftId }) {
   const deleted = await Shifts.deleteOne({ shiftId });
   return deleted;
+};
+module.exports.removetraining = async function ({ trainingId }) {
+  const training = await training.findOneAndDelete({ trainingId });
+
+  if (!training) {
+    throw new BadRequestError("training Program Not Found");
+  }
+  return { message: "training created successsfully", training };
+};
+module.exports.newMembershipPlan = async ({
+  Title,
+  description,
+  duration_days,
+  tier,
+  price,
+  training_id,
+  shiftId,
+}) => {
+  const existingPlan = await MembershipPlans.findOne({ Title });
+  if (existingPlan) {
+    throw new BadRequestError(
+      "A membership plan with this title already exists.",
+    );
+  }
+
+  const newPlan = await MembershipPlans.create({
+    Title,
+    description,
+    duration_days,
+    tier,
+    price,
+    training_id,
+    shiftId,
+  });
+
+  return newPlan;
 };
