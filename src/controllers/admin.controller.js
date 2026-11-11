@@ -5,6 +5,6 @@
 // if role  staff create standard account
 // if role trainer
 module.exports.cretaeNewaccount = async (req, res, next) => {
-  try {
+  try {   
   } catch (error) {}
 };

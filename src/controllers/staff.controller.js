@@ -1,20 +1,12 @@
 const { Payments, Member } = require("../migrations");
-const {decline} = require("../services/staff.service");
+const { findOne } = require("../migrations/Users");
+const { decline } = require("../services/staff.service");
 
 module.exports.approvePayment = async (req, res, next) => {
   try {
     const { paymentId } = req.body;
-    const payment = await Payments.findOne({ paymentId });
-    if (!payment) {
-      return res.status(404).json({ message: "Payment not found" });
-    }
-    payment.status = "verified";
-    payment.verifiedBy = req.user.userId;
-    await payment.save();
-
-
-
-
+    const staffId = req.user.id || req.user.userId;
+    const payment = await satffService.approve({ paymentId }, { id: staffId });
 
     res.json({ message: `payment verified Sucssfuly`, payment });
   } catch (error) {
@@ -24,7 +16,11 @@ module.exports.approvePayment = async (req, res, next) => {
 
 module.exports.declinePayment = async (req, res, next) => {
   try {
-    await decline(req.body);
+    const { paymentId } = req.body;
+    const staffId = req.user.id || req.user.userId;
+
+    const payment = await satffService.approve({ paymentId }, { id: staffId });
+
     res.json({ message: `payment Declined sucussfully`, payment });
   } catch (error) {
     next(error);
