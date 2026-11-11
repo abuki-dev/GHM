@@ -45,7 +45,6 @@ adminRoutes.delete("/deletePlan/:planId", deleteMembershipPlan);
 adminRoutes.post("/createshift", createShifts);
 adminRoutes.post(
   "/createMembershipPlan",
-  trainingValidator,
   handleValidationErrors,
   createMembershipPlan,
 );
