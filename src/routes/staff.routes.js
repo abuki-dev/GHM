@@ -4,7 +4,6 @@ const staffRouter = express.Router();
 const {
   getPendingPayments,
   approvePayment,
-  declinePayment,
 } = require("../controllers/staff.controller");
 const {
   handleValidationErrors,
@@ -24,6 +23,5 @@ staffRouter.get("/payment", handleValidationErrors, getPendingPayments);
 staffRouter.post("/approvepayment", handleValidationErrors, approvePayment);
 staffRouter.get("/payment", getPendingPayments);
 staffRouter.post("/approvepayment", approvePayment);
-staffRouter.post("/declinePayment", declinePaymnet);
 
 module.exports = staffRouter;
