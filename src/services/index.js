@@ -1,3 +1,9 @@
+const {
+  newtraining,
+  newshift,
+  removeshift,
+  removetraining,
+} = require("./admin.service");
 const { insertUser, loginUser, createStandard } = require("./auth.service");
 const {
   getMembershipPlans,
@@ -17,5 +23,8 @@ module.exports = {
   decline,
   createStandard,
   sendPayments,
-  newtraining: require("./admin.service").newtraining,
+  newtraining,
+  newshift,
+  removeshift,
+  removetraining,
 };
