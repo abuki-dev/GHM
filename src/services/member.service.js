@@ -10,42 +10,115 @@ module.exports.getMembershipPlans = async (page = 1) => {
   const skip = (currentPage - 1) * limit;
   console.log("Findign from teh databse");
 
+  //1 get palns by embendig with training  shift
+  // use facets the first gets panswirh the training
+  // the seceond gets the planshifts
+  // after get the shifts get the trainer by loocup
   const allPlans = await MembershipPlans.aggregate([
-    // 1. MUST sort first so skip/limit order is deterministic
+    // 1. Deterministic pagination
     { $sort: { planId: 1 } },
-
-    // 2. Pass variables directly without inner curly braces
     { $skip: skip },
     { $limit: limit },
 
-    // 3. Join with trainings collection
+    // 2. Join Training Category
     {
       $lookup: {
         from: "trainings",
         localField: "training_id",
         foreignField: "trainingId",
-        as: "Trainings",
+        as: "training",
       },
     },
+    { $unwind: { path: "$training", preserveNullAndEmptyArrays: true } },
 
-    // 4. Flatten the array, keeping plans even if training is unassigned
+    // 3. Join Shift + Nested Trainer & User
     {
-      $unwind: {
-        path: "$Trainings",
-        preserveNullAndEmptyArrays: true,
+      $lookup: {
+        from: "shifts",
+        let: { shiftId: "$shiftId" },
+        pipeline: [
+          { $match: { $expr: { $eq: ["$shiftId", "$$shiftId"] } } },
+          {
+            $lookup: {
+              from: "trainers",
+              localField: "trainerId",
+              foreignField: "trainerId",
+              as: "trainer",
+            },
+          },
+          { $unwind: { path: "$trainer", preserveNullAndEmptyArrays: true } },
+          {
+            $lookup: {
+              from: "users",
+              localField: "trainer.userId",
+              foreignField: "userId",
+              as: "user",
+            },
+          },
+          { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+        ],
+        as: "shift",
+      },
+    },
+    { $unwind: { path: "$shift", preserveNullAndEmptyArrays: true } },
+
+    // 4. Count Active Subscriptions for this Shift to calculate Available Spots
+    {
+      $lookup: {
+        from: "subscriptionpurchases",
+        let: { shiftId: "$shiftId" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$assignedShiftId", "$$shiftId"] },
+                  { $eq: ["$status", "ACTIVE"] },
+                  { $gte: ["$endDate", new Date()] },
+                ],
+              },
+            },
+          },
+          { $count: "activeCount" },
+        ],
+        as: "occupancy",
       },
     },
 
-    // 5. Clean projection and field renaming
+    // 5. Clean Output Projection
     {
       $project: {
         _id: 0,
         planId: 1,
-        Title: 1,
-        description: 1,
-        Duration: "$duration_days",
-        tier: 1,
-        training: "$Trainings.category",
+        planTitle: "$title",
+        planDescription: "$description",
+        planDurationDays: "$duration_days",
+        planTier: "$tier",
+        planPrice: "$price",
+
+        // Training Details
+        trainingTitle: "$training.title",
+        trainingCategory: "$training.category",
+        trainingLevel: "$training.level",
+
+        // Shift & Dynamic Capacity Details
+        shiftGroup: "$shift.group",
+        shiftPeriod: "$shift.period",
+        shiftDaysOfWeek: "$shift.days_of_week",
+        shiftStartTime: "$shift.startTime",
+        shiftEndTime: "$shift.endTime",
+        shiftMaxCapacity: "$shift.max_capacity",
+        availableSpots: {
+          $subtract: [
+            { $ifNull: ["$shift.max_capacity", 0] },
+            { $ifNull: [{ $arrayElemAt: ["$occupancy.activeCount", 0] }, 0] },
+          ],
+        },
+
+        // Trainer Details
+        trainerExperience: "$shift.trainer.experience",
+        trainerName: "$shift.user.full_name",
+        trainerEmail: "$shift.user.email",
       },
     },
   ]);
@@ -74,6 +147,7 @@ module.exports.savePaymentInfos = async (
   { planId, amount, transactionId },
   { id },
 ) => {
+  //check the avalable spots by using thepna id iside teh ouchases
   await Payments.create({
     planId,
     amount,
