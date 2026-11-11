@@ -90,3 +90,7 @@ module.exports.newMembershipPlan = async ({
 
   return newPlan;
 };
+module.exports.removePlan = async function ({ shiftId }) {
+  const deletePlan = await MembershipPlans.deleteOne({ planId });
+  return deletePlan;
+};

@@ -4,6 +4,7 @@ const {
   deleteTraining,
   createMembershipPlan,
   createShifts,
+  deleteMembershipPlan,
 } = require("../controllers/admin.controller");
 const {
   register,
@@ -40,6 +41,7 @@ adminRoutes.post(
   createTraining,
 );
 adminRoutes.delete("/deletetraning/:trainingId", deleteTraining);
+adminRoutes.delete("/deletePlan/:planId", deleteMembershipPlan);
 adminRoutes.post("/createshift", createShifts);
 adminRoutes.post(
   "/createMembershipPlan",
