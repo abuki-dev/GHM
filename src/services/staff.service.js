@@ -1,39 +1,32 @@
-const { Payments, Member } = require("../migrations");
+const { Payments, Member, MembershipPlans } = require("../migrations");
 const MembershipPurchase = require("../migrations/MemberShip_Purchase");
 const { BadRequestError } = require("../utils/app.errors");
 
-module.exports.approve = async ({ paymentId }, { id }) => {
-  const payment = await Payments.findOne({ paymentId });
+module.exports.approve = async ({ transactionId }, { id }) => {
+  const payment = await Payments.findOne({ transactionId });
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-  payment.status = "verified";
-  payment.verifiedBy = id;
-  await payment.save();
+  const members = await Member.findOne({ userId: payment.userId });
+  if (!members) {
+    throw new BadRequestError("Member Not Found");
+  }
 
-  const member = await Member.findOne({
-    memberId: payment.userId,
+  const plan = await MembershipPlans.findOne({ planId: payment.planId });
+  if (!plan) {
+    throw new BadRequestError("Membership Plan Not Found");
+  }
+  const existingPurchase = await MembershipPurchase.findOne({
+    payment_id: payment._id,
   });
+  if (existingPurchase) {
+    return { payment, membershipPurchase: existingPurchase };
+  }
 
   let startDate = new Date();
   let endDate = new Date();
+  endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30));
 
-  //member_id panid start end payment_id
-  if (member) {
-    member.subscriptions = member.subscriptions || [];
-    const pendingSub = member.subscriptions.find(
-      (sub) => sub.status === "pending",
-    );
-
-    if (pendingSub) {
-      pendingSub.status = "active";
-      startDate = pendingSub.start_date || startDate;
-      endDate = pendingSub.end_date || endDate;
-    } else {
-      endDate.setMonth(endDate.getMonth() + (payment.duration || 1));
-    }
-    await member.save();
-  }
   const membershipPurchase = await MembershipPurchase.create({
     member_id: payment.userId || payment.member_id,
     membership_plan_id: payment.planId || payment.membership_plan_id,
@@ -42,6 +35,10 @@ module.exports.approve = async ({ paymentId }, { id }) => {
     end_date: endDate,
     status: "active",
   });
+
+  payment.status = "verified";
+  payment.verifiedBy = id;
+  await payment.save();
   return { payment, membershipPurchase };
 };
 // paymentid user id nad planid
