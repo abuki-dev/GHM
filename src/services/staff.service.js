@@ -44,6 +44,8 @@ module.exports.approve = async ({ paymentId }, { id }) => {
   });
   return { payment, membershipPurchase };
 };
+// paymentid user id nad planid
+//
 module.exports.decline = async ({ paymentId }, { id }) => {
   const payment = await Payments.findOne({ paymentId });
   if (!payment) {
@@ -62,7 +64,7 @@ module.exports.decline = async ({ paymentId }, { id }) => {
     );
     if (pendingSub) {
       pendingSub.status = "failed";
-      await memeber.save();
+      await member.save();
     }
   }
   return payment;

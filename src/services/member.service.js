@@ -190,3 +190,10 @@ module.exports.getUsrePaymentHistory = async ({ id }) => {
 
   return histories;
 };
+module.exports.generateUserSession = async ({ userId }) => {
+  // first let us find teh user form teh memembers data if he actual y exest
+  // if exeists find him also in the ourchaes if he have  aplan
+  // if he got aplan chek its the  esxpired
+  // if expoted throm error the that tg
+  const ismemberExits;
+};
