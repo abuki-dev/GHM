@@ -12,7 +12,7 @@ const {
   getMemberSubscriptions,
   savePaymentInfos,
 } = require("./member.service");
-const { decline, sendPayments } = require("./staff.service");
+const { approve, decline, sendPayments } = require("./staff.service");
 
 module.exports = {
   getMembershipPlans,
@@ -29,4 +29,5 @@ module.exports = {
   removeshift,
   removetraining,
   newMembershipPlan,
+  approve,
 };
