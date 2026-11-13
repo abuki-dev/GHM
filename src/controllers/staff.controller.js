@@ -1,4 +1,3 @@
-const { Payments } = require("../migrations");
 const { decline, sendPayments } = require("../services");
 const { approve } = require("../services/staff.service");
 
