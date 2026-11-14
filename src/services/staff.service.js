@@ -1,4 +1,4 @@
-const { Payments, Member, MembershipPlans } = require("../migrations");
+const { Payments, Member, MembershipPlans, Users } = require("../migrations");
 const MembershipPurchase = require("../migrations/MemberShip_Purchase");
 const { BadRequestError } = require("../utils/app.errors");
 
@@ -7,8 +7,8 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-  const members = await Member.findOne({ userId: payment.userId });
-  if (!members) {
+  const user = await Users.findOne({ userId: payment.userId });
+  if (!user) {
     throw new BadRequestError("Member Not Found");
   }
 
@@ -41,6 +41,8 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   await payment.save();
   return { payment, membershipPurchase };
 };
+// paymentid user id nad planid
+//
 module.exports.decline = async ({ paymentId }, { id }) => {
   const payment = await Payments.findOne({ paymentId });
   if (!payment) {
@@ -59,7 +61,7 @@ module.exports.decline = async ({ paymentId }, { id }) => {
     );
     if (pendingSub) {
       pendingSub.status = "failed";
-      await memeber.save();
+      await member.save();
     }
   }
   return payment;

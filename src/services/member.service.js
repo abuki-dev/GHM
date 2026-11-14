@@ -2,7 +2,9 @@ const {
   MembershipPlans,
   MembershipPurchase,
   Payments,
+  Member,
 } = require("../migrations");
+const { BadRequestError } = require("../utils/app.errors");
 
 module.exports.getMembershipPlans = async (page = 1) => {
   const currentPage = Math.max(1, parseInt(page, 10) || 1);
@@ -189,4 +191,14 @@ module.exports.getUsrePaymentHistory = async ({ id }) => {
   ]);
 
   return histories;
+};
+module.exports.generateUserSession = async ({ userId }) => {
+  // first let us find teh user form teh memembers data if he actual y exest
+  // if exeists find him also in the ourchaes if he have  aplan
+  // if he got aplan chek its the  esxpired
+  // if expoted throm error the that tg
+  const ismemberExits = await Member.findOne({ userId });
+  if (!ismemberExits) {
+    throw new BadRequestError();
+  }
 };
