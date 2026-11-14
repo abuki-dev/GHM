@@ -11,6 +11,7 @@ const {
   getUsrePaymentHistory,
   getMemberSubscriptions,
   savePaymentInfos,
+  generateUserSession,
 } = require("./member.service");
 const { approve, decline, sendPayments } = require("./staff.service");
 
@@ -30,4 +31,5 @@ module.exports = {
   removetraining,
   newMembershipPlan,
   approve,
+  generateUserSession,
 };

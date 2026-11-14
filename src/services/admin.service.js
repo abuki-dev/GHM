@@ -1,5 +1,6 @@
 const { Training, Shifts, MembershipPlans, Trainer } = require("../migrations");
 const { BadRequestError } = require("../utils/app.errors");
+const { formatHours } = require("../utils/helpers");
 
 module.exports.newtraining = async function ({
   title,
@@ -32,12 +33,14 @@ module.exports.newshift = async function ({
   if (!istrainerexist) {
     throw new BadRequestError("Trainer Id is invalid try agan ");
   }
+  const foramedTime = formatHours(startTime);
+  const foramedTime2 = formatHours(endTime);
   const shift = await Shifts.create({
     trainerId: trainerId,
     group: group,
     period: period,
-    startTime: startTime,
-    endTime: endTime,
+    startTime: foramedTime,
+    endTime: foramedTime2,
     days_of_week: days_of_week,
     max_capacity: max_capacity,
   });

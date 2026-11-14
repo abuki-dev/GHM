@@ -11,7 +11,10 @@ const sessionSchema = new mongoose.Schema({
     ref: "trainers",
     required: true,
   },
-  start_time: { type: Date, default: Date.now },
+  start_time: {
+    type: String,
+    default: new Date().getHours() + ":" + new Date().getMinutes(),
+  },
   end_time: { type: Date },
   calories_burned: { type: Number },
   status: {
@@ -21,7 +24,7 @@ const sessionSchema = new mongoose.Schema({
     index: true,
   },
   client_note: { type: String },
-  date_duration: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 const Session = mongoose.model("sessions", sessionSchema);
 module.exports = Session;

@@ -4,6 +4,7 @@ const {
   sendMemberSubscriptions,
   purchaseForPlan,
   sendHistory,
+  chekinUser,
 } = require("../controllers/members.controller");
 
 // te user gets all avalble subscriptons

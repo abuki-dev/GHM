@@ -2,9 +2,11 @@ const {
   MembershipPlans,
   MembershipPurchase,
   Payments,
-  Member,
+  Shifts,
+  Sessions,
 } = require("../migrations");
 const { BadRequestError } = require("../utils/app.errors");
+const { toMinutes } = require("../utils/helpers");
 
 module.exports.getMembershipPlans = async (page = 1) => {
   const currentPage = Math.max(1, parseInt(page, 10) || 1);
@@ -192,13 +194,84 @@ module.exports.getUsrePaymentHistory = async ({ id }) => {
 
   return histories;
 };
-module.exports.generateUserSession = async ({ userId }) => {
+module.exports.generateUserSession = async ({ userId, purchaseId }) => {
   // first let us find teh user form teh memembers data if he actual y exest
   // if exeists find him also in the ourchaes if he have  aplan
   // if he got aplan chek its the  esxpired
   // if expoted throm error the that tg
-  const ismemberExits = await Member.findOne({ userId });
-  if (!ismemberExits) {
-    throw new BadRequestError();
+
+  const existingPurchase = await MembershipPurchase.findOne({
+    purchaseId,
+    member_id: userId,
+  });
+  if (!existingPurchase) {
+    throw new BadRequestError(
+      "The purchase is not found for this user, please check your purchase ID and try again.  If the issue persists, contact support for assistance.",
+    );
   }
+  // 2. Check manual cancellation/suspension status
+  if (existingPurchase.status !== "active") {
+    throw new BadRequestError(
+      `Your subscription is currently ${existingPurchase.status}. Please contact support.`,
+    );
+  }
+  const now = new Date();
+  if (now > new Date(existingPurchase.end_date)) {
+    await MembershipPurchase.updateOne(
+      { _id: existingPurchase._id },
+      { $set: { status: "expired" } },
+    );
+    throw new BadRequestError(
+      "Your subscription has expired. Please renew or Try subscribing one.",
+    );
+  }
+  // the us find the user purchase plan expired or not
+  // chek if the puchease actualy have a plan
+  const plan = await MembershipPlans.findOne({
+    planId: existingPurchase.membership_plan_id,
+  });
+  if (!plan) {
+    throw new BadRequestError("Error the Plan Is not fouded try agan ");
+  }
+  // is the user plan is normal no creatign session just  allowe him to go inside
+  if (plan.tier === "normal") {
+    return { message: "Normal member's paln ,You can go inside" };
+  }
+  //  chck if teh user is allowed to get in this shift at currunt time
+  // else let us chek the shift start and end time
+  const shift = await Shifts.findOne({ shiftId: plan.shiftId });
+  if (!shift) {
+    throw new BadRequestError("shift Not found contact The staffs");
+  }
+  // if vip or vvip chek the time by date.now vs teh start and end time
+  // the memeber is allowed to go only if the time is betwen tehstart and end tine
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = toMinutes(shift.startTime);
+  const endMinutes = toMinutes(shift.endTime);
+
+  if (currentMinutes < startMinutes) {
+    throw new BadRequestError(
+      `You are too early to enter the gym, please come back at ${shift.startTime}`,
+    );
+  }
+
+  if (currentMinutes > endMinutes) {
+    throw new BadRequestError(
+      `You are too late to enter the gym, your shift ended at ${shift.endTime}`,
+    );
+  }
+  const formattedTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+    now.getMinutes(),
+  ).padStart(2, "0")}`;
+  // now we can create the session for the user and let him go inside
+  const trainerId = shift.trainerId;
+  const createdSession = await Sessions.create({
+    trainer_id: trainerId,
+    member_id: userId,
+    start_time: formattedTime,
+    status: "scheduled",
+    createdAt: new Date(),
+  });
+  return { message: "Session created successfully", session: createdSession };
 };
