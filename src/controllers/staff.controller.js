@@ -4,7 +4,7 @@ const { approve } = require("../services/staff.service");
 module.exports.approvePayment = async (req, res, next) => {
   try {
     const payment = await approve(req.body, req.user);
-    res.json({ message: `payment verified Sucssfuly`, payment });
+    res.json({ message: `payment verified Sucssfuly`, ...payment });
   } catch (error) {
     next(error);
   }
