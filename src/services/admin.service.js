@@ -1,4 +1,4 @@
-const { Training, Shifts, MembershipPlans, Trainer } = require("../migrations");
+const { Training, Shifts, MembershipPlans, Users } = require("../migrations");
 const { BadRequestError } = require("../utils/app.errors");
 const { formatHours } = require("../utils/helpers");
 
@@ -29,7 +29,10 @@ module.exports.newshift = async function ({
   if (!startTime || !endTime || endTime < startTime) {
     throw new BadRequestError("Time is out of range or ");
   }
-  const istrainerexist = await Trainer.findOne({ trainerId });
+  const istrainerexist = await Users.findOne({
+    userId: trainerId,
+    role: "trainer",
+  });
   if (!istrainerexist) {
     throw new BadRequestError("Trainer Id is invalid try agan ");
   }
