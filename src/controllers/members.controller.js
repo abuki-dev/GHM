@@ -5,6 +5,7 @@ const {
   getUsrePaymentHistory,
   generateUserSession,
 } = require("../services");
+const { generateGympass } = require("../services/member.service");
 
 // get all subscriptions from the database
 module.exports.sendMembershipPlans = async (req, res, next) => {
@@ -46,6 +47,17 @@ module.exports.chekinUser = async (req, res, next) => {
   try {
     const session = await generateUserSession(req.body);
     res.status(201).json({ message: "Session generated ", session });
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getGympass = async (req, res, next) => {
+  try {
+    const { qrToken, exp } = await generateGympass(req.user);
+    res.status(200).json({
+      qrToken,
+      expiresAt: exp,
+    });
   } catch (error) {
     next(error);
   }

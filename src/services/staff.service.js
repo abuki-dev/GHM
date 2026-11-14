@@ -4,8 +4,8 @@ const {
   MembershipPlans,
   Shifts,
   Users,
+  MembershipPurchase,
 } = require("../migrations");
-const MembershipPurchase = require("../migrations/MemberShip_Purchase");
 const { BadRequestError } = require("../utils/app.errors");
 
 module.exports.approve = async ({ transactionId }, { id }) => {
@@ -52,7 +52,7 @@ module.exports.approve = async ({ transactionId }, { id }) => {
 
   const planIds = plansOnShift.map((item) => item.planId);
 
-  const occupiedSpots = await membershipPurchase.countDocuments({
+  const occupiedSpots = await MembershipPurchase.countDocuments({
     membership_plan_id: { $in: planIds },
     status: "active",
     end_date: { $gt: new Date() },
@@ -68,16 +68,14 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     );
   }
 
-
-
   let startDate = new Date();
   let endDate = new Date();
-  endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30));
+  endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30) + 1);
 
   const membershipPurchase = await MembershipPurchase.create({
-    member_id: payment.userId || payment.member_id,
-    membership_plan_id: payment.planId || payment.membership_plan_id,
-    payment_id: payment.paymentId.toString(),
+    member_id: payment.userId,
+    membership_plan_id: payment.planId,
+    payment_id: payment._id,
     start_date: startDate,
     end_date: endDate,
     status: "active",
@@ -90,12 +88,12 @@ module.exports.approve = async ({ transactionId }, { id }) => {
 };
 // paymentid user id nad planid
 //
-module.exports.decline = async ({ paymentId }, { id } ) => {
+module.exports.decline = async ({ paymentId }, { id }) => {
   const payment = await Payments.findOne({ paymentId });
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-  const staffId = id ;
+  const staffId = id;
   payment.status = "failed";
   payment.verifiedBy = staffId;
   await payment.save();
