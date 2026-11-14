@@ -8,13 +8,13 @@ const {
 const MembershipPurchase = require("../migrations/MemberShip_Purchase");
 const { BadRequestError } = require("../utils/app.errors");
 
-module.exports.approve = async ({ transactionId }, { id, userId } = {}) => {
+module.exports.approve = async ({ transactionId }, { id }) => {
   const payment = await Payments.findOne({ transactionId });
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
 
-  const staffId = id || userId;
+  const staffId = id;
 
   if (payment.status !== "pending") {
     throw new BadRequestError("payment is not pending");
@@ -23,6 +23,7 @@ module.exports.approve = async ({ transactionId }, { id, userId } = {}) => {
   const existingPurchase = await MembershipPurchase.findOne({
     payment_id: payment._id,
   });
+
   if (existingPurchase) {
     ((payment.status = "verified"), (payment.verifiedBy = staffId));
     await payment.save();
@@ -66,6 +67,9 @@ module.exports.approve = async ({ transactionId }, { id, userId } = {}) => {
       "there is no spot available so the payment declined",
     );
   }
+
+
+
   let startDate = new Date();
   let endDate = new Date();
   endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30));
@@ -86,12 +90,12 @@ module.exports.approve = async ({ transactionId }, { id, userId } = {}) => {
 };
 // paymentid user id nad planid
 //
-module.exports.decline = async ({ paymentId }, { id, userId } = {}) => {
+module.exports.decline = async ({ paymentId }, { id } ) => {
   const payment = await Payments.findOne({ paymentId });
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-  const staffId = id || userId;
+  const staffId = id ;
   payment.status = "failed";
   payment.verifiedBy = staffId;
   await payment.save();
@@ -127,7 +131,6 @@ module.exports.sendPayments = async (page = 1) => {
         planId: 1,
         amount: 1,
         status: 1,
-        verifiedBy: 1,
         transactionId: 1,
         date: 1,
       },
