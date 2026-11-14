@@ -115,7 +115,7 @@ module.exports.sendPayments = async (page = 1) => {
   const limit = 5;
   const skip = (currentPage - 1) * limit;
   const filteredPayments = await Payments.aggregate([
-    { $sort: { Date: -1 } },
+    { $sort: { date: -1 } },
     { $match: { status: "pending" } },
     { $skip: skip },
     { $limit: limit },
@@ -123,7 +123,8 @@ module.exports.sendPayments = async (page = 1) => {
     {
       $project: {
         _id: 0,
-        paymentId: 1,
+        userId: 1,
+        planId: 1,
         amount: 1,
         status: 1,
         verifiedBy: 1,
