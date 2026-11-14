@@ -14,4 +14,5 @@ memberRouter.get("/allmembershipPlans", sendMembershipPlans);
 memberRouter.get("/mysubscriptions", sendMemberSubscriptions);
 memberRouter.post("/purchasePlan", purchaseForPlan);
 memberRouter.get("/paymentHistory", sendHistory);
+memberRouter.post("/checkin",chekinUser)
 module.exports = memberRouter;
