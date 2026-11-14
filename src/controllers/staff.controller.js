@@ -1,5 +1,4 @@
-const { decline, sendPayments } = require("../services");
-const { approve } = require("../services/staff.service");
+const { decline, sendPayments, approve } = require("../services");
 
 module.exports.approvePayment = async (req, res, next) => {
   try {
@@ -18,7 +17,6 @@ module.exports.declinePayment = async (req, res, next) => {
     next(error);
   }
 };
-
 module.exports.getPendingPayments = async (req, res, next) => {
   try {
     const pendingPayments = await sendPayments(req.query.page);

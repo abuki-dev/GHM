@@ -5,7 +5,7 @@ const membershipPurchaseSchema = new mongoose.Schema({
   purchaseId: { type: String, required: true, unique: true, index: true },
   member_id: {
     type: String,
-    ref: "members",
+    ref: "users",
     required: true,
     index: true,
   },
