@@ -1,3 +1,4 @@
+const { verify, sign } = require("jsonwebtoken");
 const {
   MembershipPlans,
   MembershipPurchase,
@@ -7,6 +8,7 @@ const {
 } = require("../migrations");
 const { BadRequestError } = require("../utils/app.errors");
 const { toMinutes } = require("../utils/helpers");
+const env = require("../config/env");
 
 module.exports.getMembershipPlans = async (page = 1) => {
   const currentPage = Math.max(1, parseInt(page, 10) || 1);
@@ -69,21 +71,41 @@ module.exports.getMembershipPlans = async (page = 1) => {
     // 4. Count Active Subscriptions for this Shift to calculate Available Spots
     {
       $lookup: {
-        from: "subscriptionpurchases",
-        let: { shiftId: "$shiftId" },
+        from: "membershipplans",
+        let: { targetShiftId: "$shiftId" },
         pipeline: [
+          // 1. Find all plans that share this shiftId
+          { $match: { $expr: { $eq: ["$shiftId", "$$targetShiftId"] } } },
+
+          // 2. Join active purchases belonging to ANY of those plans
           {
-            $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$assignedShiftId", "$$shiftId"] },
-                  { $eq: ["$status", "ACTIVE"] },
-                  { $gte: ["$endDate", new Date()] },
-                ],
-              },
+            $lookup: {
+              from: "membershippurchases",
+              let: { currentPlanId: "$planId" },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        { $eq: ["$membership_plan_id", "$$currentPlanId"] },
+                        { $eq: ["$status", "active"] },
+                        { $gte: ["$end_date", new Date()] },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: "activePurchases",
             },
           },
-          { $count: "activeCount" },
+
+          // 3. Count purchases per plan, then sum them across all plans in this shift
+          {
+            $group: {
+              _id: null,
+              totalActiveCount: { $sum: { $size: "$activePurchases" } },
+            },
+          },
         ],
         as: "occupancy",
       },
@@ -115,7 +137,12 @@ module.exports.getMembershipPlans = async (page = 1) => {
         availableSpots: {
           $subtract: [
             { $ifNull: ["$shift.max_capacity", 0] },
-            { $ifNull: [{ $arrayElemAt: ["$occupancy.activeCount", 0] }, 0] },
+            {
+              $ifNull: [
+                { $arrayElemAt: ["$occupancy.totalActiveCount", 0] },
+                0,
+              ],
+            },
           ],
         },
 
@@ -152,6 +179,19 @@ module.exports.savePaymentInfos = async (
   { id },
 ) => {
   //check the avalable spots by using thepna id iside teh ouchases
+  if (
+    !planId ||
+    !amount ||
+    !transactionId ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    transactionId.trim() === "" ||
+    planId.trim() === ""
+  ) {
+    throw new BadRequestError(
+      "Missing required fields: planId, amount, or transactionId",
+    );
+  }
   await Payments.create({
     planId,
     amount,
@@ -194,12 +234,15 @@ module.exports.getUsrePaymentHistory = async ({ id }) => {
 
   return histories;
 };
-module.exports.generateUserSession = async ({ userId, purchaseId }) => {
+module.exports.generateUserSession = async ({ qrToken }) => {
   // first let us find teh user form teh memembers data if he actual y exest
   // if exeists find him also in the ourchaes if he have  aplan
   // if he got aplan chek its the  esxpired
   // if expoted throm error the that tg
-
+  let decoded;
+  // If someone tampered with userId or purchaseId, jwt.verify() throws an error!
+  decoded = verify(qrToken, env.JWT_SECRET);
+  const { u: userId, p: purchaseId } = decoded;
   const existingPurchase = await MembershipPurchase.findOne({
     purchaseId,
     member_id: userId,
@@ -274,4 +317,28 @@ module.exports.generateUserSession = async ({ userId, purchaseId }) => {
     createdAt: new Date(),
   });
   return { message: "Session created successfully", session: createdSession };
+};
+module.exports.generateGympass = async ({ id }) => {
+  const activePurchase = await MembershipPurchase.findOne({
+    member_id: id,
+    status: "active",
+    end_date: { $gt: new Date() },
+  });
+
+  if (!activePurchase) {
+    throw new BadRequestError("No active subscription found.");
+  }
+
+  // 2. Calculate exact seconds left until end_date so the QR expires at the exact second the plan ends
+  const secondsRemaining = Math.floor(
+    (new Date(activePurchase.end_date).getTime() - Date.now()) / 1000,
+  );
+
+  // 3. Sign a compact JWT (keep keys short so the QR code squares stay big & easy to scan)
+  const qrToken = sign(
+    { u: id, p: activePurchase.purchaseId },
+    env.JWT_SECRET,
+    { expiresIn: secondsRemaining },
+  );
+  return { qrToken: qrToken, exp: activePurchase["end_date"] };
 };

@@ -5,6 +5,7 @@ const {
   purchaseForPlan,
   sendHistory,
   chekinUser,
+  getGympass,
 } = require("../controllers/members.controller");
 
 // te user gets all avalble subscriptons
@@ -14,5 +15,6 @@ memberRouter.get("/allmembershipPlans", sendMembershipPlans);
 memberRouter.get("/mysubscriptions", sendMemberSubscriptions);
 memberRouter.post("/purchasePlan", purchaseForPlan);
 memberRouter.get("/paymentHistory", sendHistory);
-memberRouter.post("/checkin",chekinUser)
+memberRouter.post("/checkin", chekinUser);
+memberRouter.get("/gympass", getGympass);
 module.exports = memberRouter;
