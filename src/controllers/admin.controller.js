@@ -20,7 +20,7 @@ module.exports.createTraining = async (req, res, next) => {
 module.exports.deleteTraining = async (req, res, next) => {
   try {
     const { trainingId } = req.params;
-    const result = await removetraining({ trainingId });
+    const result = await removetraining(trainingId);
     res.status(200).json({ message: "training deleted successfully" }, result);
   } catch (err) {
     next(err);
@@ -39,7 +39,7 @@ module.exports.createMembershipPlan = async (req, res, next) => {
 module.exports.deleteMembershipPlan = async (req, res, next) => {
   try {
     const { planId } = req.params;
-    const removeMembershipPlan = await removePlan(req.body);
+    const removeMembershipPlan = await removePlan(planId);
     res.status(200).json({
       message: "membership Plan deleted successfully",
       removeMembershipPlan,
@@ -59,8 +59,8 @@ module.exports.createShifts = async (req, res, next) => {
 
 module.exports.deleteShifts = async (req, res, next) => {
   try {
-    const shift = await removeshift(req.body);
-    res.status(200).json({ message: "shift successfully", shift });
+    const shift = await removeshift(req.qurey);
+    res.status(200).json({ message: "shift successfully Deleted ", shift });
   } catch (err) {
     next(err);
   }

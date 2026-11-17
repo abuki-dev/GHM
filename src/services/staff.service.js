@@ -70,7 +70,7 @@ module.exports.approve = async ({ transactionId }, { id }) => {
 
   let startDate = new Date();
   let endDate = new Date();
-  endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30) + 1);
+  endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30));
 
   const membershipPurchase = await MembershipPurchase.create({
     member_id: payment.userId || payment.member_id,
@@ -93,7 +93,7 @@ module.exports.decline = async ({ transactionId }, { id }) => {
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-  
+
   const staffId = id;
   payment.status = "failed";
   payment.verifiedBy = staffId;

@@ -1,4 +1,10 @@
-const { Training, Shifts, MembershipPlans, Users } = require("../migrations");
+const {
+  Training,
+  Shifts,
+  MembershipPlans,
+  Users,
+  Trainer,
+} = require("../migrations");
 const { BadRequestError } = require("../utils/app.errors");
 const { formatHours } = require("../utils/helpers");
 
@@ -29,11 +35,14 @@ module.exports.newshift = async function ({
   if (!startTime || !endTime || endTime < startTime) {
     throw new BadRequestError("Time is out of range or ");
   }
-  const istrainerexist = await Users.findOne({
-    userId: trainerId,
+  const istrainerexist = await Trainer.findOne({
+    trainerId: trainerId,
+  });
+  const isValidUser = await Users.findOne({
+    userId: istrainerexist.userId,
     role: "trainer",
   });
-  if (!istrainerexist) {
+  if (!istrainerexist || isValidUser) {
     throw new BadRequestError("Trainer Id is invalid try agan ");
   }
   const foramedTime = formatHours(startTime);
@@ -59,7 +68,7 @@ module.exports.removetraining = async function ({ trainingId }) {
   if (!training) {
     throw new BadRequestError("training Program Not Found");
   }
-  return { message: "training created successsfully", training };
+  return { message: "training deleted successsfully", training };
 };
 module.exports.newMembershipPlan = async ({
   title,

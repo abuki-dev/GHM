@@ -95,7 +95,6 @@ module.exports.createStandard = async ({
     });
     return user;
   }
-
   throw new BadRequestError("Invalid role assigniation or account creation");
 };
 module.exports.loginUser = async ({ email, password }) => {

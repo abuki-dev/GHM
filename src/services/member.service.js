@@ -6,7 +6,7 @@ const {
   Shifts,
   Sessions,
 } = require("../migrations");
-const { BadRequestError } = require("../utils/app.errors");
+const { BadRequestError, ConflictError } = require("../utils/app.errors");
 const { toMinutes } = require("../utils/helpers");
 const env = require("../config/env");
 
@@ -192,6 +192,12 @@ module.exports.savePaymentInfos = async (
       "Missing required fields: planId, amount, or transactionId",
     );
   }
+  const paymentExists = await Payments.findOne({ transactionId });
+  if (paymentExists) {
+    throw new ConflictError(
+      "Payment with this transactionId already exists and used",
+    );
+  }
   await Payments.create({
     planId,
     amount,
@@ -203,7 +209,7 @@ module.exports.savePaymentInfos = async (
 module.exports.getUsrePaymentHistory = async ({ id }) => {
   console.log("Getting payment history for userId:", id);
   const histories = await Payments.aggregate([
-    { $sort: { userId: 1, status: -1 } },
+    { $sort: { userId: 1, date: -1 } },
     { $match: { userId: id } },
     {
       $lookup: {
@@ -223,7 +229,7 @@ module.exports.getUsrePaymentHistory = async ({ id }) => {
       $project: {
         _id: 0,
         planId: 1,
-        PlanTitle: "$Plans.Title",
+        PlanTitle: "$Plans.title",
         amount: 1,
         transactionId: 1,
         status: 1,
@@ -258,7 +264,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
       `Your subscription is currently ${existingPurchase.status}. Please contact support.`,
     );
   }
-  const now = new Date();
+  const now = new Date().toUTCString();
   if (now > new Date(existingPurchase.end_date)) {
     await MembershipPurchase.updateOne(
       { _id: existingPurchase._id },
@@ -288,7 +294,17 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   }
   // if vip or vvip chek the time by date.now vs teh start and end time
   // the memeber is allowed to go only if the time is betwen tehstart and end tine
+  const sessiinexits = await Sessions.findOne({
+    member_id: userId,
+    createdAt: new Date().toISOString(),
+  });
 
+  if (sessiinexits) {
+    return {
+      message: "Session already live go and finish irt",
+      session: sessiinexits,
+    };
+  }
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   const startMinutes = toMinutes(shift.startTime);
   const endMinutes = toMinutes(shift.endTime);
@@ -313,13 +329,13 @@ module.exports.generateUserSession = async ({ qrToken }) => {
     trainer_id: trainerId,
     member_id: userId,
     start_time: formattedTime,
-    status: "scheduled",
-    createdAt: new Date(),
+    status: "in_progress",
+    createdAt: new Date().toISOString(),
   });
   return { message: "Session created successfully", session: createdSession };
 };
 module.exports.generateGympass = async ({ id }) => {
-  const activePurchase = await MembershipPurchase.findOne({
+  const activePurchase = await MembershipPurchase.find({
     member_id: id,
     status: "active",
     end_date: { $gt: new Date() },

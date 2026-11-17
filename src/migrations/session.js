@@ -13,13 +13,13 @@ const sessionSchema = new mongoose.Schema({
   },
   start_time: {
     type: String,
-    default: new Date().getHours() + ":" + new Date().getMinutes(),
+    default: `${new Date().getHours() + ":" + new Date().getMinutes()}`,
   },
   end_time: { type: Date },
   calories_burned: { type: Number },
   status: {
     type: String,
-    enum: ["scheduled", "completed", "cancelled"],
+    enum: ["scheduled", "completed", "cancelled", "in_progress"],
     required: true,
     index: true,
   },

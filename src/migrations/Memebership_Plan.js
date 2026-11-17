@@ -11,13 +11,12 @@ const membershpPlanSchema = new mongoose.Schema({
   training_id: {
     type: String,
     ref: "trainings",
-    required: true,
     index: true,
   },
   shiftId: {
     type: String,
     ref: "shifts",
-    required: true,
+    index: true,
   },
 });
 membershpPlanSchema.pre("validate", async function () {

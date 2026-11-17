@@ -6,7 +6,7 @@ const toMinutes = (timeStr) => {
 };
 const formatHours = (date) => {
   if (typeof date === "number") {
-    return `{ ${String(date).padStart(2, "0")}:00 }`;
+    return `${String(date).padStart(2, "0")}:00`;
   }
   const [h, m] = String(date).split(":").map(Number);
   return `${String(h).padStart(2, "0")}:${String(m || 0).padStart(2, "0")}`;

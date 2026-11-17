@@ -5,6 +5,7 @@ const {
   createMembershipPlan,
   createShifts,
   deleteMembershipPlan,
+  deleteShifts,
 } = require("../controllers/admin.controller");
 const {
   register,
@@ -50,4 +51,11 @@ adminRoutes.post(
   handleValidationErrors,
   createMembershipPlan,
 );
+adminRoutes.delete("/deleteshift/:shiftId", deleteShifts);
+// get all users
+// get all members with email
+// get all tarinig
+// get all purchase
+// get all plans
+// get all trainers with email
 module.exports = adminRoutes;
