@@ -7,7 +7,7 @@ const checkinSchema = new mongoose.Schema({
     required: true,
     index: true,
   },
-  checkin_time: { type: Date, default: Date.now },
+  chekinTime: { type: Date, default: Date.now },
 });
 const Checkins = mongoose.model("chekins", checkinSchema);
 module.exports = Checkins;

@@ -2,13 +2,19 @@
 
 const express = require("express");
 const authRouter = express.Router();
-const { register, login } = require("../controllers/auth.controller");
+const {
+  register,
+  login,
+  chekinUser,
+} = require("../controllers/auth.controller");
 const {
   ValidateRegister,
   validateLogin,
   handleValidationErrors,
   validatemembrData,
 } = require("../validator/auth.validator");
+
+const { requireRole } = require("../middlewares/auth");
 
 authRouter.post(
   "/register",
@@ -19,4 +25,5 @@ authRouter.post(
 );
 
 authRouter.post("/login", validateLogin, handleValidationErrors, login);
+authRouter.get("/chekin", requireRole("staff", "admin"), chekinUser);
 module.exports = authRouter;

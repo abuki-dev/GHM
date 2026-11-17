@@ -51,21 +51,22 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   }).select("planId");
 
   const planIds = plansOnShift.map((item) => item.planId);
+  if (plan.tier !== "normal") {
+    const occupiedSpots = await MembershipPurchase.countDocuments({
+      membership_plan_id: { $in: planIds },
+      status: "active",
+      end_date: { $gt: new Date() },
+    });
 
-  const occupiedSpots = await MembershipPurchase.countDocuments({
-    membership_plan_id: { $in: planIds },
-    status: "active",
-    end_date: { $gt: new Date() },
-  });
+    if (occupiedSpots >= shift.max_capacity) {
+      payment.status = "failed";
+      payment.verifiedBy = staffId;
+      await payment.save();
 
-  if (occupiedSpots >= shift.max_capacity) {
-    payment.status = "failed";
-    payment.verifiedBy = staffId;
-    await payment.save();
-
-    throw new BadRequestError(
-      "there is no spot available so the payment declined",
-    );
+      throw new BadRequestError(
+        "there is no spot available so the payment declined",
+      );
+    }
   }
 
   let startDate = new Date();

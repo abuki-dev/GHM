@@ -52,13 +52,22 @@ function errorHandler(err, req, res, next) {
     statusCode = 401;
     message = "Invalid token. Please log in again.";
   }
-
   // Expired Token
   if (err.name === "TokenExpiredError") {
     statusCode = 401;
     message = "Your session token has expired. Please log in again.";
   }
-
+  // Expired Token Gympass
+  if (err.name === "GympassTokenExpiredError") {
+    statusCode = 401;
+    message =
+      "your subscribtion has expired please renew your subscription to get access to the gym";
+  }
+  if (err.name === "GympassJsonWebTokenError") {
+    statusCode = 401;
+    message =
+      "Invalid token for gympass. please use the correct token to access the gym";
+  }
   // --- RESPONSE STRUCTURE ---
 
   res.status(statusCode).json({

@@ -7,7 +7,7 @@ const {
   Sessions,
 } = require("../migrations");
 const { BadRequestError, ConflictError } = require("../utils/app.errors");
-const { toMinutes } = require("../utils/helpers");
+const { toMinutes, createChekin } = require("../utils/helpers");
 const env = require("../config/env");
 
 module.exports.getMembershipPlans = async (page = 1) => {
@@ -186,7 +186,7 @@ module.exports.savePaymentInfos = async (
     !Number.isFinite(amount) ||
     amount <= 0 ||
     transactionId.trim() === "" ||
-    isNaN(PlanId) === ""
+    isNaN(planId) === ""
   ) {
     throw new BadRequestError(
       "Missing required fields: planId, amount, or transactionId",
@@ -247,7 +247,19 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   // if expoted throm error the that tg
   let decoded;
   // If someone tampered with userId or purchaseId, jwt.verify() throws an error!
-  decoded = verify(qrToken, env.JWT_SECRET);
+  try {
+    decoded = verify(qrToken, env.GYMPASS_SECRET);
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      error.name = "GympassJsonWebTokenError";
+    }
+    // Expired Token
+    if (error.name === "TokenExpiredError") {
+      error.name = "GympassTokenExpiredError";
+    }
+    throw error;
+  }
+
   const { u: userId, p: purchaseId } = decoded;
   const existingPurchase = await MembershipPurchase.findOne({
     purchaseId,
@@ -264,7 +276,17 @@ module.exports.generateUserSession = async ({ qrToken }) => {
       `Your subscription is currently ${existingPurchase.status}. Please contact support.`,
     );
   }
-  const now = new Date().toUTCString();
+  const now = new Date().toLocaleString("en-US", {
+    timeZone: "Africa/Addis_Ababa",
+    timeStyle: "short",
+  });
+
+  // const ethiopiaTime = date.toLocaleString("en-US", {
+  //   timeZone: "Africa/Addis_Ababa",
+  //   dateStyle: "full",
+  //   timeStyle: "short",
+  // });
+
   if (now > new Date(existingPurchase.end_date)) {
     await MembershipPurchase.updateOne(
       { _id: existingPurchase._id },
@@ -284,6 +306,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   }
   // is the user plan is normal no creatign session just  allowe him to go inside
   if (plan.tier === "normal") {
+    await createChekin(userId, new Date().toISOString());
     return { message: "Normal member's paln ,You can go inside" };
   }
   //  chck if teh user is allowed to get in this shift at currunt time
@@ -294,15 +317,15 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   }
   // if vip or vvip chek the time by date.now vs teh start and end time
   // the memeber is allowed to go only if the time is betwen tehstart and end tine
-  const sessiinexits = await Sessions.findOne({
+  const existignSession = await Sessions.findOne({
     member_id: userId,
     createdAt: new Date().toISOString(),
   });
 
-  if (sessiinexits) {
+  if (existignSession) {
     return {
-      message: "Session already live go and finish irt",
-      session: sessiinexits,
+      message: "Session already live go and finish it",
+      session: existignSession,
     };
   }
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
@@ -332,6 +355,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
     status: "in_progress",
     createdAt: new Date().toISOString(),
   });
+  await createChekin(userId, new Date().toISOString());
   return { message: "Session created successfully", session: createdSession };
 };
 module.exports.generateGympass = async ({ id }) => {
@@ -353,7 +377,7 @@ module.exports.generateGympass = async ({ id }) => {
   // 3. Sign a compact JWT (keep keys short so the QR code squares stay big & easy to scan)
   const qrToken = sign(
     { u: id, p: activePurchase.purchaseId },
-    env.JWT_SECRET,
+    env.GYMPASS_SECRET,
     { expiresIn: secondsRemaining },
   );
   return { qrToken: qrToken, exp: activePurchase["end_date"] };

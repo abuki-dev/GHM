@@ -1,4 +1,9 @@
-const { insertUser, loginUser, createStandard } = require("../services");
+const {
+  insertUser,
+  loginUser,
+  createStandard,
+  generateUserSession,
+} = require("../services");
 const { cookieOptions } = require("../utils/token");
 
 module.exports.register = async (req, res, next) => {
@@ -42,6 +47,14 @@ module.exports.cretaeNewaccount = async (req, res, next) => {
   try {
     const account = await createStandard(req.body);
     res.json({ message: "Account created sucussfuly ", account });
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.chekinUser = async (req, res, next) => {
+  try {
+    const session = await generateUserSession(req.body);
+    res.status(201).json({ message: "Session generated ", session });
   } catch (error) {
     next(error);
   }

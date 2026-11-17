@@ -3,7 +3,6 @@ const {
   getMemberSubscriptions,
   savePaymentInfos,
   getUsrePaymentHistory,
-  generateUserSession,
 } = require("../services");
 const { generateGympass } = require("../services/member.service");
 
@@ -43,14 +42,7 @@ module.exports.sendHistory = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.chekinUser = async (req, res, next) => {
-  try {
-    const session = await generateUserSession(req.body);
-    res.status(201).json({ message: "Session generated ", session });
-  } catch (error) {
-    next(error);
-  }
-};
+
 module.exports.getGympass = async (req, res, next) => {
   try {
     const { qrToken, exp } = await generateGympass(req.user);
