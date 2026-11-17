@@ -186,7 +186,7 @@ module.exports.savePaymentInfos = async (
     !Number.isFinite(amount) ||
     amount <= 0 ||
     transactionId.trim() === "" ||
-    planId.trim() === ""
+    isNaN(PlanId) === ""
   ) {
     throw new BadRequestError(
       "Missing required fields: planId, amount, or transactionId",

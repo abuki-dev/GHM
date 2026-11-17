@@ -13,7 +13,6 @@ module.exports.incrementId = async function (doc, dbmodel) {
     console.log("Incrementing ID for model:", dbmodel);
     try {
       const prefix = dbmodel.replace("Id", "").toUpperCase();
-      console.log(dbmodel);
       const counter = await Counter.findOneAndUpdate(
         { _id: dbmodel }, // Finds the doc (e.g., { _id: "userId" })
         { $inc: { sequence_value: 1 } }, // Atomically increments the counter
@@ -23,7 +22,7 @@ module.exports.incrementId = async function (doc, dbmodel) {
         },
       );
       if (!counter) {
-        Counter.create({ _id: dbmodel, sequence_value: 1 });
+        await Counter.create({ _id: dbmodel, sequence_value: 1 });
       }
       const paddedSeq = String(counter.sequence_value).padStart(3, "0");
       doc[dbmodel] = `${prefix}-${paddedSeq}`;

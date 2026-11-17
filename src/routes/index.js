@@ -36,3 +36,5 @@ module.exports = router;
 // shift time ceration issue
 // counting the plans for the users
 // default start time for sesiion as froxem
+//gympass eroro handling
+// plan id validation when creatung the payment
