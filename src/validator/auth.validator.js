@@ -102,6 +102,14 @@ const validateLogin = [
 
   body("password").trim().notEmpty().withMessage("Password is required"),
 ];
+const validateTransactionId = [
+  body("transactionId")
+  .trim()
+  .notEmpty()
+  .withMessage("TransactionId can't be empty")
+  .isMongoId()
+  .withMessage("Invalid transaction Id format")
+]
 module.exports = {
   ValidateRegister,
   validateLogin,
@@ -109,4 +117,5 @@ module.exports = {
   validatemembrData,
   ValidateRole,
   valdatextraData,
+  validateTransactionId
 };

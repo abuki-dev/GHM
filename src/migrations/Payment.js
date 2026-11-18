@@ -11,10 +11,20 @@ const paymentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    default: "pending",
     index: true,
-    enum: ["verified", "pending", "failed"],
+    enum: [
+      "pending",
+      "processing",
+      "verified",
+      "failed",
+      "refund_pending",
+      "refunded",
+    ],
+    default: "pending",
   },
+  refundReason: String,
+  refundRequestedAt: Date,
+  refundCompletedAt: Date,
   verifiedBy: { type: String, ref: "users", index: true },
   date: { type: Date, default: Date.now, index: true },
 });

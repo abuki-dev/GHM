@@ -264,8 +264,8 @@ module.exports.generateUserSession = async ({ qrToken }) => {
       `Your subscription is currently ${existingPurchase.status}. Please contact support.`,
     );
   }
-  const now = new Date().toUTCString();
-  if (now > new Date(existingPurchase.end_date)) {
+  const now = new Date();
+  if (now >= existingPurchase.end_date) {
     await MembershipPurchase.updateOne(
       { _id: existingPurchase._id },
       { $set: { status: "expired" } },
@@ -294,6 +294,32 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   }
   // if vip or vvip chek the time by date.now vs teh start and end time
   // the memeber is allowed to go only if the time is betwen tehstart and end tine
+  const daysByGroup = {
+    "MON-WED-FRI": ["Mon", "Wed", "Fri"],
+    "TU-TH-SA": ["Tue", "Thu", "Sat"],
+  };
+
+  const localTimeParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Addis_Ababa",
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+
+  const localParts = Object.fromEntries(
+    localTimeParts.map(({ type, value }) => [type, value]),
+  );
+
+  const allowedDays = new Set(
+    (Shifts.days_of_week || []).flatMap((group) => daysByGroup[group] || []),
+  );
+
+  if (!allowedDays.has(localParts.weekday)) {
+    throw new BadRequestError(
+      `your shift does not run today. Scheduled days: ${shift.days_of_week.join(", ")}`,
+    );
+  }
   const sessiinexits = await Sessions.findOne({
     member_id: userId,
     createdAt: new Date().toISOString(),
@@ -305,7 +331,8 @@ module.exports.generateUserSession = async ({ qrToken }) => {
       session: sessiinexits,
     };
   }
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const currentMinutes =
+    Number(localParts.hour) * 60 + Number(localParts.minute);
   const startMinutes = toMinutes(shift.startTime);
   const endMinutes = toMinutes(shift.endTime);
 
@@ -334,10 +361,17 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   });
   return { message: "Session created successfully", session: createdSession };
 };
-module.exports.generateGympass = async ({ id }) => {
+module.exports.generateGympass = async ({ id, purchaseId }) => {
+  if (!purchaseId) {
+    throw new BadRequestError("PurchaseId is required");
+  }
+
+  const now = new Date();
   const activePurchase = await MembershipPurchase.find({
+    purchaseId,
     member_id: id,
     status: "active",
+    start_date: { $lte: now },
     end_date: { $gt: new Date() },
   });
 
@@ -347,7 +381,7 @@ module.exports.generateGympass = async ({ id }) => {
 
   // 2. Calculate exact seconds left until end_date so the QR expires at the exact second the plan ends
   const secondsRemaining = Math.floor(
-    (new Date(activePurchase.end_date).getTime() - Date.now()) / 1000,
+    (activePurchase.end_date.getTime() - now.getTime()) / 1000,
   );
 
   // 3. Sign a compact JWT (keep keys short so the QR code squares stay big & easy to scan)
@@ -356,5 +390,5 @@ module.exports.generateGympass = async ({ id }) => {
     env.JWT_SECRET,
     { expiresIn: secondsRemaining },
   );
-  return { qrToken: qrToken, exp: activePurchase["end_date"] };
+  return { qrToken: qrToken, exp: activePurchase.end_date };
 };

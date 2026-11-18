@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const { hash, compare } = require("bcryptjs");
 const { Users, Member, Trainer, Staff } = require("../migrations");
 const {
@@ -6,6 +7,7 @@ const {
   BadRequestError,
 } = require("../utils/app.errors");
 const { signToken } = require("../utils/token");
+const { session } = require("passport");
 
 module.exports.insertUser = async ({
   full_name,
@@ -23,22 +25,40 @@ module.exports.insertUser = async ({
     throw new ConflictError("User already exists");
   }
   const hashedPassword = await hash(password, 10);
-  const user = await Users.create({
-    full_name,
-    email,
-    password: hashedPassword,
-    gender,
-    age,
-    role: "member",
-    phone,
-  });
-  await Member.create({
-    userId: user.userId,
-    dateOfBirth,
-    weight,
-    height,
-  });
+  const seession = await mongoose.startSession();
+  let user;
+  try {
+    await session.WithTransaction(async () => {
+      [user] = await Users.create(
+        [
+          {
+            full_name,
+            email,
+            password: hashedPassword,
+            gender,
+            age,
+            role: "member",
+            phone,
+          },
+        ],
+        { session },
+      );
 
+      await Member.create(
+        [
+          {
+            userId: user.userId,
+            dateOfBirth,
+            weight,
+            height,
+          },
+        ],
+        { session },
+      );
+    });
+  }finally{
+    await session.endSession();
+  }
   return user;
 };
 module.exports.createStandard = async ({

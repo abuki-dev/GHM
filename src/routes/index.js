@@ -27,6 +27,9 @@ module.exports = router;
 // sending warning email for the users by checking every day status if remaining day is 5  and automatically expire after z day ends even before the checkin expire it
 // fixing the gympass token generator generates for every pychase name token
 // daysof teh week never enforced at teh chekign
+
+//------- 
+
 //creatinng session for the user when they enter the gym
 //Fxiign the session time with the server time xone
 // usinng difffrecnt Secrert for the gympass token generation and the jwt token generation
@@ -38,3 +41,21 @@ module.exports = router;
 // default start time for sesiion as froxem
 //gympass eroro handling
 // plan id validation when creatung the payment
+
+
+
+module.exports.getGympass = async (req, res, next) => {
+  try {
+    const { qrToken, exp } = await generateGympass({
+      id: req.user.id,
+      purchaseId: req.query.purchaseId,
+    });
+
+    res.status(200).json({
+      qrToken,
+      expiresAt: exp,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

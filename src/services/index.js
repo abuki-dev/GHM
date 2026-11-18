@@ -12,9 +12,9 @@ const {
   getMemberSubscriptions,
   savePaymentInfos,
   generateUserSession,
+  generateGympass,
 } = require("./member.service");
-const { approve, decline, sendPayments } = require("./staff.service");
-
+const { approve, decline, refund, sendPayments } = require("./staff.service");
 module.exports = {
   getMembershipPlans,
   insertUser,
@@ -23,6 +23,7 @@ module.exports = {
   getMemberSubscriptions,
   savePaymentInfos,
   decline,
+  refund,
   createStandard,
   sendPayments,
   newtraining,
@@ -32,4 +33,5 @@ module.exports = {
   newMembershipPlan,
   approve,
   generateUserSession,
+  generateGympass
 };
