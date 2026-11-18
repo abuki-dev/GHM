@@ -53,7 +53,10 @@ module.exports.chekinUser = async (req, res, next) => {
 };
 module.exports.getGympass = async (req, res, next) => {
   try {
-    const { qrToken, exp } = await generateGympass(req.user);
+    const { qrToken, exp } = await generateGympass({
+      id: req.user.id,
+      purchaseId: req.query.purchaseId,
+    });
     res.status(200).json({
       qrToken,
       expiresAt: exp,

@@ -19,6 +19,7 @@ const membershipPurchaseSchema = new mongoose.Schema({
     ref: "payments",
     required: true,
     unique: true,
+    index: true,
   },
   start_date: { type: Date, required: true, index: true },
   end_date: { type: Date, required: true, index: true },
