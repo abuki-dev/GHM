@@ -41,17 +41,17 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     throw new BadRequestError("Membership Plan Not Found");
   }
 
-  const shift = await Shifts.findOne({ shiftId: plan.shiftId });
-  if (!shift) {
-    throw new BadRequestError("Shift not found");
-  }
-
-  const plansOnShift = await MembershipPlans.find({
-    shiftId: plan.shiftId,
-  }).select("planId");
-
-  const planIds = plansOnShift.map((item) => item.planId);
   if (plan.tier !== "normal") {
+    const shift = await Shifts.findOne({ shiftId: plan.shiftId });
+    if (!shift) {
+      throw new BadRequestError("Shift not found");
+    }
+
+    const plansOnShift = await MembershipPlans.find({
+      shiftId: plan.shiftId,
+    }).select("planId");
+
+    const planIds = plansOnShift.map((item) => item.planId);
     const occupiedSpots = await MembershipPurchase.countDocuments({
       membership_plan_id: { $in: planIds },
       status: "active",
@@ -77,8 +77,8 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     member_id: payment.userId || payment.member_id,
     membership_plan_id: payment.planId || payment.membership_plan_id,
     payment_id: payment._id.toString(),
-    start_date: startDate,
-    end_date: endDate,
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
     status: "active",
   });
 

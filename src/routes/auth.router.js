@@ -14,7 +14,7 @@ const {
   validatemembrData,
 } = require("../validator/auth.validator");
 
-const { requireRole } = require("../middlewares/auth");
+const { requireRole, authenticate } = require("../middlewares/auth");
 
 authRouter.post(
   "/register",
@@ -25,5 +25,10 @@ authRouter.post(
 );
 
 authRouter.post("/login", validateLogin, handleValidationErrors, login);
-authRouter.post("/chekin", requireRole("staff", "admin"), chekinUser);
+authRouter.post(
+  "/chekin",
+  authenticate,
+  requireRole("staff", "admin"),
+  chekinUser,
+);
 module.exports = authRouter;
