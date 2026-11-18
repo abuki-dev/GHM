@@ -6,30 +6,22 @@ const {
   Users,
   MembershipPurchase,
 } = require("../migrations");
+const { markPaymentRefunded } = require("../routes");
 const { BadRequestError } = require("../utils/app.errors");
 
 module.exports.approve = async ({ transactionId }, { id }) => {
-  const payment = await Payments.findOne({ transactionId });
+  const payment = await Payments.findOneAndUpdate(
+    { transactionId, status: "pending" },
+    { $set: { status: "processing", verifiedBy: id } },
+    { new: true },
+  );
+
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
 
   const staffId = id;
 
-  if (payment.status !== "pending") {
-    throw new BadRequestError("payment is not pending");
-  }
-
-  const existingPurchase = await MembershipPurchase.findOne({
-    payment_id: payment._id,
-  });
-
-  if (existingPurchase) {
-    ((payment.status = "verified"), (payment.verifiedBy = staffId));
-    await payment.save();
-
-    return { payment, membershipPurchase: existingPurchase };
-  }
 
   const user = await Users.findOne({ userId: payment.userId });
   if (!user) {
@@ -59,17 +51,27 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   });
 
   if (occupiedSpots >= shift.max_capacity) {
-    payment.status = "failed";
+    payment.status = "refund_pending";
     payment.verifiedBy = staffId;
+    payment.refundReason = "Shift is full";
+    payment.refundRequestedAt = new Date();
     await payment.save();
 
-    throw new BadRequestError(
-      "there is no spot available so the payment declined",
-    );
+    throw new BadRequestError("Shift is full. This payment requires a refund.");
   }
 
-  let startDate = new Date();
-  let endDate = new Date();
+
+  const now = new Date();
+
+  const latestPurchase = await MembershipPurchase.findOne({
+    member_id:payment.userId,
+    membership_plan_id:payment.planId,
+    status: { $in: ["active", "upcoming"]},
+    end_date: { $gt: now},
+  }).sort({ end_date : -1});
+
+  let startDate = latestPurchase ? new Date(Math.max(now.getTime(), latestPurchase.end_date.getTime())) : now;
+  let endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30));
 
   const membershipPurchase = await MembershipPurchase.create({
@@ -86,18 +88,31 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   await payment.save();
   return { payment, membershipPurchase };
 };
+
+module.exports.refund = async ({ transactionId }) => {
+  const payment = await Payments.findOneAndUpdate(
+    { transactionId, status: "refund_pending" },
+    { $set: { status: "refunded", refundCompletedAt: new Date() } },
+    { new: true },
+  );
+
+  if (!payment) {
+    throw new BadRequestError("Refund-pending payment not found");
+  }
+
+  return payment;
+};
 // paymentid user id nad planid
-//
+
 module.exports.decline = async ({ transactionId }, { id }) => {
-  const payment = await Payments.findOne({ transactionId });
+  const payment = await Payments.findOneAndUpdate(
+    { transactionId, status: "pending" },
+    { $set: { status: "failed", verifiedBy: id } },
+    { new: true },
+  );
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-
-  const staffId = id;
-  payment.status = "failed";
-  payment.verifiedBy = staffId;
-  await payment.save();
 
   const member = await Member.findOne({
     memberId: payment.userId,

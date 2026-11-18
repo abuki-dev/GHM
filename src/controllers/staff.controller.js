@@ -1,4 +1,5 @@
 const { decline, sendPayments, approve } = require("../services");
+const { refund } = require("../services/staff.service");
 
 module.exports.approvePayment = async (req, res, next) => {
   try {
@@ -21,6 +22,14 @@ module.exports.getPendingPayments = async (req, res, next) => {
   try {
     const pendingPayments = await sendPayments(req.query.page);
     res.json({ pendingPayments });
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.markPaymentRefunded = async (req, res, next) => {
+  try {
+    const payment = await refund(req.body);
+    res.json({ message: "Refund marked complete", payment });
   } catch (error) {
     next(error);
   }
