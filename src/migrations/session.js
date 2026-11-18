@@ -25,6 +25,7 @@ const sessionSchema = new mongoose.Schema({
   },
   client_note: { type: String },
   createdAt: { type: Date, default: Date.now },
+  siftId: { type: String, ref: "shifts" },
 });
 const Session = mongoose.model("sessions", sessionSchema);
 module.exports = Session;

@@ -358,6 +358,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
     start_time: formattedTime,
     status: "in_progress",
     createdAt: new Date().toISOString(),
+    siftId: shift.shiftId,
   });
   return { message: "Session created successfully", session: createdSession };
 };

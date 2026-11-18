@@ -35,7 +35,7 @@ module.exports = router;
 // -->usinng difffrecnt Secrert for the gympass token generation and the jwt token generation
 //--> adding capacity for each Tier no need for this
 //-->>donot count capacity for the normal tier when aproving the payment
-//SHIFT AND sessions are not linked to each other
+//-->SHIFT AND sessions are not linked to each other
 // shift time ceration issue
 // counting the plans for the users
 // default start time for sesiion as froxem
