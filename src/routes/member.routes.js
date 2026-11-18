@@ -4,7 +4,6 @@ const {
   sendMemberSubscriptions,
   purchaseForPlan,
   sendHistory,
-  chekinUser,
   getGympass,
 } = require("../controllers/members.controller");
 
@@ -15,6 +14,5 @@ memberRouter.get("/allmembershipPlans", sendMembershipPlans);
 memberRouter.get("/mysubscriptions", sendMemberSubscriptions);
 memberRouter.post("/purchasePlan", purchaseForPlan);
 memberRouter.get("/paymentHistory", sendHistory);
-memberRouter.post("/checkin", chekinUser);
 memberRouter.get("/gympass", getGympass);
 module.exports = memberRouter;

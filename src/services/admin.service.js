@@ -25,16 +25,17 @@ module.exports.newtraining = async function ({
 
 module.exports.newshift = async function ({
   trainerId,
-  group,
   period,
   days_of_week,
   startTime,
   endTime,
+  room,
   max_capacity,
 }) {
-  if (!startTime || !endTime || endTime < startTime) {
-    throw new BadRequestError("Time is out of range or ");
+  if (!startTime || !endTime || !room) {
+    throw new BadRequestError("Required fileds are empty try gan");
   }
+
   const istrainerexist = await Trainer.findOne({
     trainerId: trainerId,
   });
@@ -49,7 +50,6 @@ module.exports.newshift = async function ({
   const foramedTime2 = formatHours(endTime);
   const shift = await Shifts.create({
     trainerId: trainerId,
-    group: group,
     period: period,
     startTime: foramedTime,
     endTime: foramedTime2,
@@ -86,8 +86,18 @@ module.exports.newMembershipPlan = async ({
       "Training program not found or Shift not founded.",
     );
   }
+  // now let us cheke the tier vvip =25 peopeles vvip 5 peoples / shift
+  // if the tier is normal just passit
+  if (
+    (tier === "vip" && shiftfound.max_capacity !== 15) ||
+    (tier === "vvip" && shiftfound.max_capacity !== 5)
+  ) {
+    throw new BadRequestError(
+      `Error the shift and plan mismatched plan is ${tier} and shift capacity is ${shiftfound.max_capacity}`,
+    );
+  }
 
-  const newPlan = await MembershipPlans.create({
+  const newPlan = new MembershipPlans({
     title,
     description,
     duration_days,
@@ -96,6 +106,10 @@ module.exports.newMembershipPlan = async ({
     training_id,
     shiftId,
   });
+  if (tier === "normal") {
+    newPlan.shiftId = null;
+  }
+  await newPlan.save();
 
   return newPlan;
 };

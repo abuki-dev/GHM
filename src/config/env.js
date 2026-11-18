@@ -6,6 +6,7 @@ const env = {
   MONGODB_URI: process.env.MONGODB_URI,
   JWT_SECRET: process.env.JWT_SECRET,
   SESSION_SECRET: process.env.SESSION_SECRET,
+  GYMPASS_SECRET: process.env.GYMPASS_SECRET,
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || "http://localhost:3000",
 };
 env.isProd = env.NODE_ENV === "production";

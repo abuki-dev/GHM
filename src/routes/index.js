@@ -28,34 +28,16 @@ module.exports = router;
 // fixing the gympass token generator generates for every pychase name token
 // daysof teh week never enforced at teh chekign
 
-//------- 
+//--->
 
-//creatinng session for the user when they enter the gym
-//Fxiign the session time with the server time xone
-// usinng difffrecnt Secrert for the gympass token generation and the jwt token generation
-// capacity for each Tier
-// donot count capacity for the normal tier when aproving the payment
-// SHIFT AND sessions are not linked to each other
+//-->>creatinng session for the user when they enter the gym inperson // must be staff ad and teh anmin whi does this
+//-->>Fxiign the session time with the server time xone toem is now ethiopisn
+// -->usinng difffrecnt Secrert for the gympass token generation and the jwt token generation
+//--> adding capacity for each Tier no need for this
+//-->>donot count capacity for the normal tier when aproving the payment
+//SHIFT AND sessions are not linked to each other
 // shift time ceration issue
 // counting the plans for the users
 // default start time for sesiion as froxem
 //gympass eroro handling
 // plan id validation when creatung the payment
-
-
-
-module.exports.getGympass = async (req, res, next) => {
-  try {
-    const { qrToken, exp } = await generateGympass({
-      id: req.user.id,
-      purchaseId: req.query.purchaseId,
-    });
-
-    res.status(200).json({
-      qrToken,
-      expiresAt: exp,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
