@@ -175,13 +175,15 @@ module.exports.getMemberSubscriptions = async ({ id }) => {
   return allPuschases;
 };
 module.exports.savePaymentInfos = async (
-  { planId, amount, transactionId },
+  { planId, amount, transactionId, method },
   { id },
 ) => {
   //check the avalable spots by using thepna id iside teh ouchases
   if (
     !planId ||
     !amount ||
+    !method ||
+    !["CBE", "BOA", "dashen"].includes(method) ||
     !transactionId ||
     !Number.isFinite(amount) ||
     amount <= 0 ||
@@ -192,7 +194,7 @@ module.exports.savePaymentInfos = async (
       "Missing required fields: planId, amount, or transactionId",
     );
   }
-  const paymentExists = await Payments.findOne({ transactionId });
+  const paymentExists = await Payments.findOne({ transactionId, method });
   if (paymentExists) {
     throw new ConflictError(
       "Payment with this transactionId already exists and used",

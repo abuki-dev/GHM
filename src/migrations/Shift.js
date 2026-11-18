@@ -2,8 +2,13 @@ const mongoose = require("mongoose");
 const { incrementId } = require("../utils/increment.js");
 const shiftSchema = new mongoose.Schema({
   shiftId: { type: String, required: true, unique: true, index: true },
-  trainerId: { type: String, required: true, ref: "trainers" },
+  trainerId: { type: String, required: true, ref: "trainers", idnex: true },
   group: { type: String, required: true, unique: true },
+  room: {
+    type: String,
+    required: true,
+    enum: ["Main hall", "VVIP Room", "VIP Room"],
+  },
   period: {
     type: String,
     required: true,
@@ -37,6 +42,7 @@ const shiftSchema = new mongoose.Schema({
 });
 shiftSchema.pre("validate", async function () {
   await incrementId(this, "shiftId");
+  await incrementId(this, "groupId");
 });
 const Shift = mongoose.model("shifts", shiftSchema);
 module.exports = Shift;

@@ -25,5 +25,5 @@ authRouter.post(
 );
 
 authRouter.post("/login", validateLogin, handleValidationErrors, login);
-authRouter.get("/chekin", requireRole("staff", "admin"), chekinUser);
+authRouter.post("/chekin", requireRole("staff", "admin"), chekinUser);
 module.exports = authRouter;
