@@ -19,8 +19,7 @@ module.exports.createTraining = async (req, res, next) => {
 };
 module.exports.deleteTraining = async (req, res, next) => {
   try {
-    const { trainingId } = req.params;
-    const result = await removetraining(trainingId);
+    const result = await removetraining(req.params);
     res.status(200).json({ message: "training deleted successfully" }, result);
   } catch (err) {
     next(err);
