@@ -6,6 +6,7 @@ const {
   approvePayment,
   declinePayment,
   markPaymentRefunded,
+  approveRenewal,
 } = require("../controllers/staff.controller");
 const {
   handleValidationErrors,

@@ -1,5 +1,5 @@
 const { decline, sendPayments, approve } = require("../services");
-const { refund } = require("../services/staff.service");
+const { refund, renewPurchaseRequest } = require("../services/staff.service");
 
 module.exports.approvePayment = async (req, res, next) => {
   try {
