@@ -7,7 +7,13 @@ const paymentSchema = new mongoose.Schema({
   method: {
     type: String,
     required: true,
-    enum: ["CBE", "BOA", "Dashen", "teleBirr"],
+    enum: ["CBE", "BOA", "Dashen", "teleBirr", "manual"],
+  },
+  cateogry: {
+    type: String,
+    required: true,
+    enum: ["new", "renew"],
+    default: "new",
   },
   status: {
     type: String,

@@ -175,7 +175,7 @@ module.exports.getMemberSubscriptions = async ({ id }) => {
   return allPuschases;
 };
 module.exports.savePaymentInfos = async (
-  { planId, amount, transactionId },
+  { planId, amount, transactionId, method },
   { id },
 ) => {
   //check the avalable spots by using thepna id iside teh ouchases
@@ -203,6 +203,7 @@ module.exports.savePaymentInfos = async (
     amount,
     transactionId,
     userId: id,
+    method,
   });
   return { message: `Sucussfully payed ${amount} for plan ${planId}` };
 };
@@ -312,7 +313,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   );
 
   const allowedDays = new Set(
-    (Shifts.days_of_week || []).flatMap((group) => daysByGroup[group] || []),
+    (shift.days_of_week || []).flatMap((group) => daysByGroup[group] || []),
   );
 
   if (!allowedDays.has(localParts.weekday)) {
@@ -368,7 +369,7 @@ module.exports.generateGympass = async ({ id, purchaseId }) => {
   }
 
   const now = new Date();
-  const activePurchase = await MembershipPurchase.find({
+  const activePurchase = await MembershipPurchase.findOne({
     purchaseId,
     member_id: id,
     status: "active",

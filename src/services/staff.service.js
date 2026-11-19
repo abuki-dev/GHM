@@ -1,6 +1,5 @@
 const {
   Payments,
-  Member,
   MembershipPlans,
   Shifts,
   Users,
@@ -9,8 +8,11 @@ const {
 const { BadRequestError } = require("../utils/app.errors");
 
 module.exports.approve = async ({ transactionId }, { id }) => {
+  if (!transactionId || !id) {
+    throw new BadRequestError("transactionId and user id are required");
+  }
   const payment = await Payments.findOneAndUpdate(
-    { transactionId, status: "pending" },
+    { transactionId, status: { $in: ["pending", "processing"] } },
     { $set: { status: "processing", verifiedBy: id } },
     { new: true },
   );
@@ -20,7 +22,6 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   }
 
   const staffId = id;
-
 
   const user = await Users.findOne({ userId: payment.userId });
   if (!user) {
@@ -49,29 +50,24 @@ module.exports.approve = async ({ transactionId }, { id }) => {
       end_date: { $gt: new Date() },
     });
 
-  if (occupiedSpots >= shift.max_capacity) {
-    payment.status = "refund_pending";
-    payment.verifiedBy = staffId;
-    payment.refundReason = "Shift is full";
-    payment.refundRequestedAt = new Date();
-    await payment.save();
+    if (occupiedSpots >= shift.max_capacity) {
+      payment.status = "refund_pending";
+      payment.verifiedBy = staffId;
+      payment.refundReason = "Shift is full";
+      payment.refundRequestedAt = new Date();
+      await payment.save();
 
-    throw new BadRequestError("Shift is full. This payment requires a refund.");
+      throw new BadRequestError(
+        "Shift is full. This payment requires a refund.",
+      );
+    }
   }
 
-
   const now = new Date();
-
-  const latestPurchase = await MembershipPurchase.findOne({
-    member_id:payment.userId,
-    membership_plan_id:payment.planId,
-    status: { $in: ["active", "upcoming"]},
-    end_date: { $gt: now},
-  }).sort({ end_date : -1});
-
-  let startDate = latestPurchase ? new Date(Math.max(now.getTime(), latestPurchase.end_date.getTime())) : now;
-  let endDate = new Date(startDate);
-  endDate.setDate(endDate.getDate() + Number(plan.duration_days || 30));
+  const startDate = now;
+  const endDate = new Date(
+    now.getTime() + plan.duration_days * 24 * 60 * 60 * 1000,
+  );
 
   const membershipPurchase = await MembershipPurchase.create({
     member_id: payment.userId || payment.member_id,
@@ -80,6 +76,7 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     start_date: startDate.toISOString(),
     end_date: endDate.toISOString(),
     status: "active",
+    shiftId: plan.shiftId || null,
   });
 
   payment.status = "verified";
@@ -87,7 +84,6 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   await payment.save();
   return { payment, membershipPurchase };
 };
-}
 module.exports.refund = async ({ transactionId }) => {
   const payment = await Payments.findOneAndUpdate(
     { transactionId, status: "refund_pending" },
@@ -104,8 +100,11 @@ module.exports.refund = async ({ transactionId }) => {
 // paymentid user id nad planid
 
 module.exports.decline = async ({ transactionId }, { id }) => {
+  if (!transactionId || !id) {
+    throw new BadRequestError("transactionId and user id are required");
+  }
   const payment = await Payments.findOneAndUpdate(
-    { transactionId, status: "pending" },
+    { transactionId, status: { $in: ["pending", "processing"] } },
     { $set: { status: "failed", verifiedBy: id } },
     { new: true },
   );
@@ -113,18 +112,6 @@ module.exports.decline = async ({ transactionId }, { id }) => {
     throw new BadRequestError("Payment Not Found try again");
   }
 
-  const member = await Member.findOne({
-    memberId: payment.userId,
-  });
-  if (member && member.subscriptions) {
-    const pendingSub = member.subscriptions.find(
-      (sub) => sub.status === "pending",
-    );
-    if (pendingSub) {
-      pendingSub.status = "failed";
-      await member.save();
-    }
-  }
   return payment;
 };
 module.exports.sendPayments = async (page = 1) => {

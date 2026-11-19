@@ -26,7 +26,7 @@ module.exports = router;
 // one member can have 2 plans
 // sending warning email for the users by checking every day status if remaining day is 5  and automatically expire after z day ends even before the checkin expire it
 // fixing the gympass token generator generates for every pychase name token
-// daysof teh week never enforced at teh chekign
+// daysof teh week never enforced at the chekign
 
 //--->
 
@@ -41,4 +41,9 @@ module.exports = router;
 // default start time for sesiion as froxem..?
 //-->>gympass eroro handling
 // -->plan id validation when creatung the payment
-//wuan shfakj l;jeag ytrae milager m,ergaoi;hlreg iojlrknea
+// new renew route for purchases and fixing approvign logics
+
+//
+
+// user renewpurchase purchase
+// staff aproveRenewal
