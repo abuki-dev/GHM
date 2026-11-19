@@ -186,7 +186,7 @@ module.exports.savePaymentInfos = async (
     !Number.isFinite(amount) ||
     amount <= 0 ||
     transactionId.trim() === "" ||
-    isNaN(PlanId) === ""
+    isNaN(planId) === ""
   ) {
     throw new BadRequestError(
       "Missing required fields: planId, amount, or transactionId",
@@ -247,7 +247,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   // if expoted throm error the that tg
   let decoded;
   // If someone tampered with userId or purchaseId, jwt.verify() throws an error!
-  decoded = verify(qrToken, env.JWT_SECRET);
+  decoded = verify(qrToken, env.GYMPASS_SECRET);
   const { u: userId, p: purchaseId } = decoded;
   const existingPurchase = await MembershipPurchase.findOne({
     purchaseId,
