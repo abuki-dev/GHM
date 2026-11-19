@@ -7,7 +7,6 @@ const {
   BadRequestError,
 } = require("../utils/app.errors");
 const { signToken } = require("../utils/token");
-const { session } = require("passport");
 
 module.exports.insertUser = async ({
   full_name,
@@ -25,7 +24,7 @@ module.exports.insertUser = async ({
     throw new ConflictError("User already exists");
   }
   const hashedPassword = await hash(password, 10);
-  const seession = await mongoose.startSession();
+  const session = await mongoose.startSession();
   let user;
   try {
     await session.WithTransaction(async () => {
@@ -56,7 +55,7 @@ module.exports.insertUser = async ({
         { session },
       );
     });
-  }finally{
+  } finally {
     await session.endSession();
   }
   return user;

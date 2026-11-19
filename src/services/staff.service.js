@@ -6,7 +6,6 @@ const {
   Users,
   MembershipPurchase,
 } = require("../migrations");
-const { markPaymentRefunded } = require("../routes");
 const { BadRequestError } = require("../utils/app.errors");
 
 module.exports.approve = async ({ transactionId }, { id }) => {
@@ -88,7 +87,7 @@ module.exports.approve = async ({ transactionId }, { id }) => {
   await payment.save();
   return { payment, membershipPurchase };
 };
-
+}
 module.exports.refund = async ({ transactionId }) => {
   const payment = await Payments.findOneAndUpdate(
     { transactionId, status: "refund_pending" },

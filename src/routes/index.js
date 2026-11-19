@@ -36,8 +36,9 @@ module.exports = router;
 //--> adding capacity for each Tier no need for this
 //-->>donot count capacity for the normal tier when aproving the payment
 //-->SHIFT AND sessions are not linked to each other
-// shift time ceration issue
-// counting the plans for the users
-// default start time for sesiion as froxem
-//gympass eroro handling
-// plan id validation when creatung the payment
+// shift time ceration issue..?
+// counting the plans for the users..?
+// default start time for sesiion as froxem..?
+//-->>gympass eroro handling
+// -->plan id validation when creatung the payment
+//wuan shfakj l;jeag ytrae milager m,ergaoi;hlreg iojlrknea
