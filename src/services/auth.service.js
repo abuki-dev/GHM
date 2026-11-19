@@ -27,7 +27,7 @@ module.exports.insertUser = async ({
   const session = await mongoose.startSession();
   let user;
   try {
-    await session.WithTransaction(async () => {
+    await session.withTransaction(async () => {
       [user] = await Users.create(
         [
           {
