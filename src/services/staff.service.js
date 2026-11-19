@@ -138,3 +138,19 @@ module.exports.sendPayments = async (page = 1) => {
   ]);
   return filteredPayments;
 };
+module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
+  if (!transactionId || !id) {
+    throw new BadRequestError("transactionId and user id are required");
+  }
+  const payment = await Payments.findOneAndUpdate(
+    { transactionId, status: { $in: ["pending", "processing"] } },
+    { $set: { status: "verified", verifiedBy: id } },
+    { new: true },
+  );
+  if (!payment) {
+    throw new BadRequestError("Payment Not Found try again");
+  }
+  // extend the membership purchase
+
+  return payment;
+};
