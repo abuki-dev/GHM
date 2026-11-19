@@ -23,7 +23,8 @@ staffRouter.post(
   register,
 ); // use the auth controller to register a new member account
 staffRouter.get("/payment", getPendingPayments);
-staffRouter.post("/approvepayment",validateTransactionId, approvePayment);
-staffRouter.post("/declinePayment",validateTransactionId, declinePayment);
+staffRouter.post("/approvepayment", validateTransactionId, approvePayment);
+staffRouter.post("/declinePayment", validateTransactionId, declinePayment);
 staffRouter.post("/refundPayment", markPaymentRefunded);
+staffRouter.post("/approveRenewal", validateTransactionId, approveRenewal);
 module.exports = staffRouter;

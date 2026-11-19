@@ -4,7 +4,10 @@ const {
   savePaymentInfos,
   getUsrePaymentHistory,
 } = require("../services");
-const { generateGympass } = require("../services/member.service");
+const {
+  generateGympass,
+  createRenewalPurchase,
+} = require("../services/member.service");
 
 // get all subscriptions from the database
 module.exports.sendMembershipPlans = async (req, res, next) => {
@@ -53,6 +56,14 @@ module.exports.getGympass = async (req, res, next) => {
       qrToken,
       expiresAt: exp,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.renewPurchase = async (req, res, next) => {
+  try {
+    const message = await createRenewalPurchase(req.body, req.user);
+    res.status(200).json(message);
   } catch (error) {
     next(error);
   }

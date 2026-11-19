@@ -34,3 +34,11 @@ module.exports.markPaymentRefunded = async (req, res, next) => {
     next(error);
   }
 };
+module.exports.approveRenewal = async (req, res, next) => {
+  try {
+    const renewal = await renewPurchaseRequest(req.body, req.user);
+    res.json({ message: `Renewal approved successfully`, ...renewal });
+  } catch (error) {
+    next(error);
+  }
+};

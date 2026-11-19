@@ -389,8 +389,44 @@ module.exports.generateGympass = async ({ id, purchaseId }) => {
   // 3. Sign a compact JWT (keep keys short so the QR code squares stay big & easy to scan)
   const qrToken = sign(
     { u: id, p: activePurchase.purchaseId },
-    env.JWT_SECRET,
+    env.GYMPASS_SECRET,
     { expiresIn: secondsRemaining },
   );
   return { qrToken: qrToken, exp: activePurchase.end_date };
+};
+module.exports.createRenewalPurchase = async (
+  { planId, amount, transactionId, method },
+  { id },
+) => {
+  if (
+    !planId ||
+    !amount ||
+    !transactionId ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    transactionId.trim() === "" ||
+    isNaN(planId) === ""
+  ) {
+    throw new BadRequestError(
+      "Missing required fields: planId, amount, or transactionId",
+    );
+  }
+  const paymentExists = await Payments.findOne({ transactionId });
+  if (paymentExists) {
+    throw new ConflictError(
+      "Payment with this transactionId already exists and used",
+    );
+  }
+
+  await Payments.create({
+    planId,
+    amount,
+    transactionId,
+    userId: id,
+    method,
+    cateogry: "renew",
+  });
+  return {
+    message: `Successfully sent renewal for ${amount} for plan ${planId} pleas wait few business days for the payment to be processed.`,
+  };
 };
