@@ -150,53 +150,5 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
+}
   // extend the membership purchase
-const existingPurchase = await MembershipPurchase.findOne({
-    payment_id: payment._id.toString(),
-  });
-  if (existingPurchase) {
-    payment.status = "verified";
-    await payment.save();
-    return { payment, membershipPurchase: existingPurchase };
-  }
-
-  const user = await Users.findOne({ userId: payment.userId });
-  if (!user) {
-    throw new BadRequestError("Member Not Found");
-  }
-
-  const plan = await MembershipPlans.findOne({ planId: payment.planId });
-  if (!plan) {
-    throw new BadRequestError("Membership Plan Not Found");
-  }
-
-  const now = new Date();
-  const latestPurchase = await MembershipPurchase.findOne({
-    member_id: payment.userId,
-    membership_plan_id: payment.planId,
-    status: { $in: ["active", "upcoming"] },
-    end_date: { $gt: now },
-  }).sort({ end_date: -1 });
-
-  const startDate =
-    latestPurchase && latestPurchase.end_date > now
-      ? latestPurchase.end_date
-      : now;
-  const endDate = new Date(
-    startDate.getTime() + plan.duration_days * 24 * 60 * 60 * 1000,
-  );
-  const membershipPurchase = await MembershipPurchase.create({
-    member_id: payment.userId,
-    membership_plan_id: payment.planId,
-    payment_id: payment._id.toString(),
-    start_date: startDate,
-    end_date: endDate,
-    status: startDate > now ? "upcoming" : "active",
-  });
-
-  payment.status = "verified";
-  await payment.save();
-
-  return { payment, membershipPurchase };
-};
-
