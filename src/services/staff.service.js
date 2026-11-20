@@ -73,8 +73,8 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     member_id: payment.userId || payment.member_id,
     membership_plan_id: payment.planId || payment.membership_plan_id,
     payment_id: payment._id.toString(),
-    start_date: startDate.toISOString(),
-    end_date: endDate.toISOString(),
+    start_date: startDate,
+    end_date: endDate,
     status: "active",
     shiftId: plan.shiftId || null,
   });
@@ -120,7 +120,7 @@ module.exports.sendPayments = async (page = 1) => {
   const skip = (currentPage - 1) * limit;
   const filteredPayments = await Payments.aggregate([
     { $sort: { date: -1 } },
-    { $match: { status: "pending" } },
+    { $match: { status: "pending", category: "new" } },
     { $skip: skip },
     { $limit: limit },
 
@@ -144,11 +144,60 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   }
   const payment = await Payments.findOneAndUpdate(
     { transactionId, status: { $in: ["pending", "processing"] } },
-    { $set: { status: "verified", verifiedBy: id } },
+    { $set: { status: "processing", verifiedBy: id } },
     { new: true },
   );
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-}
   // extend the membership purchase
+  const membershipPurchase = await MembershipPurchase.findOne({
+    member_id: payment.userId,
+    membership_plan_id: payment.planId,
+    status: "active",
+  });
+  if (!membershipPurchase) {
+    throw new BadRequestError("Active membership purchase not found");
+  }
+  const plan = await MembershipPlans.findOne({ planId: payment.planId });
+  if (!plan) {
+    throw new BadRequestError("Membership Plan Not Found");
+  }
+  const newEndDate = new Date(
+    membershipPurchase.end_date.getTime() +
+      plan.duration_days * 24 * 60 * 60 * 1000,
+  );
+
+  membershipPurchase.end_date = newEndDate;
+  await membershipPurchase.save();
+  payment.status = "verified";
+  payment.verifiedBy = id;
+  await payment.save();
+
+  return payment;
+};
+module.exports.getRenewalPayments = async (page = 1) => {
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const limit = 5;
+  const skip = (currentPage - 1) * limit;
+
+  const filteredPayments = await Payments.aggregate([
+    { $sort: { date: -1 } },
+    { $match: { status: "pending", category: "renew" } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+        userId: 1,
+        planId: 1,
+        amount: 1,
+        status: 1,
+        transactionId: 1,
+        date: 1,
+      },
+    },
+  ]);
+
+  return filteredPayments;
+};

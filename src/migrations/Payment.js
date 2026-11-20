@@ -9,7 +9,7 @@ const paymentSchema = new mongoose.Schema({
     required: true,
     enum: ["CBE", "BOA", "Dashen", "teleBirr", "manual"],
   },
-  cateogry: {
+  category: {
     type: String,
     required: true,
     enum: ["new", "renew"],

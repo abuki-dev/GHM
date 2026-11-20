@@ -394,7 +394,7 @@ module.exports.generateGympass = async ({ id, purchaseId }) => {
   );
   return { qrToken: qrToken, exp: activePurchase.end_date };
 };
-module.exports.createRenewalPurchase = async (
+module.exports.createRenewalRequest = async (
   { planId, amount, transactionId, method },
   { id },
 ) => {
