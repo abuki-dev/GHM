@@ -58,7 +58,7 @@ module.exports.createShifts = async (req, res, next) => {
 
 module.exports.deleteShifts = async (req, res, next) => {
   try {
-    const shift = await removeshift(req.qurey);
+    const shift = await removeshift(req.query);
     res.status(200).json({ message: "shift successfully Deleted ", shift });
   } catch (err) {
     next(err);
