@@ -6,6 +6,8 @@ const {
   approvePayment,
   declinePayment,
   markPaymentRefunded,
+  approveRenewal,
+  renewalRequests,
 } = require("../controllers/staff.controller");
 const {
   handleValidationErrors,
@@ -26,5 +28,6 @@ staffRouter.get("/payment", getPendingPayments);
 staffRouter.post("/approvepayment", validateTransactionId, approvePayment);
 staffRouter.post("/declinePayment", validateTransactionId, declinePayment);
 staffRouter.post("/refundPayment", markPaymentRefunded);
-staffRouter.post("/approveRenewal", validateTransactionId, approveRenewal);
+staffRouter.patch("/approveRenewal", validateTransactionId, approveRenewal);
+staffRouter.get("/renewalRequests", renewalRequests);
 module.exports = staffRouter;
