@@ -8,6 +8,8 @@ const env = {
   SESSION_SECRET: process.env.SESSION_SECRET,
   GYMPASS_SECRET: process.env.GYMPASS_SECRET,
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || "http://localhost:3000",
+  EMAIL_USER: process.env.EMAIL_USER,
+  EMAIL_PASS: process.env.EMAIL_PASS,
 };
 env.isProd = env.NODE_ENV === "production";
 
