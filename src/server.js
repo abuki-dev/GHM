@@ -1,12 +1,14 @@
 const env = require("./config/env");
 const app = require("./app");
 const { connectDB, mongoose } = require("./config/db");
+const { stopJob, startJob } = require("./schedule/updatepurchases");
 
 let server;
 
 async function start() {
   await connectDB();
-  server = app.listen(env.PORT, () => {
+  server = app.listen(env.PORT, async () => {
+    await startJob();
     console.log("Server running on http://localhost:" + env.PORT);
   });
 }
@@ -21,6 +23,7 @@ function shutdown(signal) {
   if (!server) return process.exit(0);
   server.close(async () => {
     await mongoose.connection.close();
+    await stopJob();
     process.exit(0);
   });
 }

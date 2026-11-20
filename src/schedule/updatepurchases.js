@@ -48,4 +48,13 @@ const updatePurchases = schedule("0 0 * * *", async () => {
     console.error("Error updating purchases:", error);
   }
 });
-module.exports = updatePurchases;
+module.exports = {
+  startJob: async () => {
+    console.log("The jobs are running");
+    updatePurchases.start();
+  },
+  stopJob: async () => {
+    console.log("The jobs are stooping and tremoinating");
+    updatePurchases.stop();
+  },
+};
