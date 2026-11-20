@@ -6,7 +6,7 @@ const {
 } = require("../services");
 const {
   generateGympass,
-  createRenewalPurchase,
+  createRenewalRequest,
 } = require("../services/member.service");
 
 // get all subscriptions from the database
@@ -60,9 +60,9 @@ module.exports.getGympass = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.renewPurchase = async (req, res, next) => {
+module.exports.requestRenewal = async (req, res, next) => {
   try {
-    const message = await createRenewalPurchase(req.body, req.user);
+    const message = await createRenewalRequest(req.body, req.user);
     res.status(200).json(message);
   } catch (error) {
     next(error);

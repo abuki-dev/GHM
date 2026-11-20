@@ -5,7 +5,7 @@ const {
   purchaseForPlan,
   sendHistory,
   getGympass,
-  renewPurchase,
+  requestRenewal,
 } = require("../controllers/members.controller");
 
 // te user gets all avalble subscriptons
@@ -16,5 +16,5 @@ memberRouter.get("/mysubscriptions", sendMemberSubscriptions);
 memberRouter.post("/purchasePlan", purchaseForPlan);
 memberRouter.get("/paymentHistory", sendHistory);
 memberRouter.get("/gympass", getGympass);
-memberRouter.patch("/renewPurchase", renewPurchase);
+memberRouter.post("/requestRenewal", requestRenewal);
 module.exports = memberRouter;

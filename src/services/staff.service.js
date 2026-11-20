@@ -120,7 +120,7 @@ module.exports.sendPayments = async (page = 1) => {
   const skip = (currentPage - 1) * limit;
   const filteredPayments = await Payments.aggregate([
     { $sort: { date: -1 } },
-    { $match: { status: "pending" } },
+    { $match: { status: "pending", category: "new" } },
     { $skip: skip },
     { $limit: limit },
 
@@ -138,16 +138,13 @@ module.exports.sendPayments = async (page = 1) => {
   ]);
   return filteredPayments;
 };
-module.exports.renewPurchaseRequest = async (
-  { transactionId, userId, planId },
-  { id },
-) => {
+module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   if (!transactionId || !id) {
     throw new BadRequestError("transactionId and user id are required");
   }
   const payment = await Payments.findOneAndUpdate(
     { transactionId, status: { $in: ["pending", "processing"] } },
-    { $set: { status: "verified", verifiedBy: id } },
+    { $set: { status: "processing", verifiedBy: id } },
     { new: true },
   );
   if (!payment) {
@@ -155,14 +152,14 @@ module.exports.renewPurchaseRequest = async (
   }
   // extend the membership purchase
   const membershipPurchase = await MembershipPurchase.findOne({
-    member_id: userId,
-    membership_plan_id: planId,
+    member_id: payment.userId,
+    membership_plan_id: payment.planId,
     status: "active",
   });
   if (!membershipPurchase) {
     throw new BadRequestError("Active membership purchase not found");
   }
-  const plan = await MembershipPlans.findOne({ planId });
+  const plan = await MembershipPlans.findOne({ planId: payment.planId });
   if (!plan) {
     throw new BadRequestError("Membership Plan Not Found");
   }
@@ -186,7 +183,7 @@ module.exports.getRenewalPayments = async (page = 1) => {
 
   const filteredPayments = await Payments.aggregate([
     { $sort: { date: -1 } },
-    { $match: { status: "pending", category: "renewal" } },
+    { $match: { status: "pending", category: "renew" } },
     { $skip: skip },
     { $limit: limit },
     {
