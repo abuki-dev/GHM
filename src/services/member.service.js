@@ -399,13 +399,14 @@ module.exports.createRenewalRequest = async (
   { id },
 ) => {
   if (
-    !planId ||
-    !amount ||
-    !transactionId ||
-    !Number.isFinite(amount) ||
-    amount <= 0 ||
-    transactionId.trim() === "" ||
-    isNaN(planId) === ""
+    (!planId ||
+      !amount ||
+      !transactionId ||
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      transactionId.trim() === "" ||
+      !planId,
+    planId.trim() === "")
   ) {
     throw new BadRequestError(
       "Missing required fields: planId, amount, or transactionId",
