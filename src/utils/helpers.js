@@ -1,4 +1,4 @@
-const { Checkins } = require("../migrations");
+const { Checkins, MembershipPurchase } = require("../migrations");
 
 const toMinutes = (timeStr) => {
   // Handles both "10:30" strings and plain numbers like 10
@@ -16,4 +16,44 @@ const formatHours = (date) => {
 const createChekin = async (userId, chekinTime) => {
   return await Checkins.create({ userId, chekinTime });
 };
+
+module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
+  //let us chek first if the user have the purchase
+  const isAnypurchase = await MembershipPurchase.findOne({
+    member_id: userId,
+    membership_plan_id: Plan.planId,
+    status: "active",
+  });
+  if (!isAnypurchase) {
+    return "allowed";
+  }
+  // if the purchase is founded let us chek if the plan is the same
+  if (isAnypurchase.membership_plan_id === Plan.planId) {
+    // here we going to ectend it not more
+    const updatedDate = new Date(isAnypurchase.end_date);
+    updatedDate.setDate(updatedDate.getDate() + Plan.duration_days);
+    isAnypurchase.end_date = updatedDate;
+    await isAnypurchase.save({ session });
+    return "extended";
+  }
+  // if not same let use chake the remaining dates
+  const remainigDate = Math.ceil(
+    (isAnypurchase.end_date - new Date()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (remainigDate >= 0 && remainigDate <= 5) {
+    // here we are bout to  expire the existign and
+    // let us expire the existing purchase
+    isAnypurchase.status = "expired";
+    await isAnypurchase.save({ session });
+    // then the user is procceded to create new purchase
+    return "allowed";
+  }
+
+  return "notallowed";
+  // if same checke the remainig date is 5 or les
+  // extend teh purchase by teh plans durasion day
+  // if not return not allowed then you will mark this ass pennndng refeund later
+};
+
 module.exports = { toMinutes, formatHours, createChekin };
