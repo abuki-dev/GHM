@@ -1,13 +1,16 @@
 const mongoose = require("mongoose");
 
-const checkinSchema = new mongoose.Schema({
-  userId: {
-    type: String,
-    ref: "members",
-    required: true,
-    index: true,
+const checkinSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: String,
+      ref: "members",
+      required: true,
+      index: true,
+    },
+    chekinTime: { type: Date, default: Date.now },
   },
-  chekinTime: { type: Date, default: Date.now },
-});
+  { timestamps: true },
+);
 const Checkins = mongoose.model("chekins", checkinSchema);
 module.exports = Checkins;
