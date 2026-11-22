@@ -6,7 +6,7 @@ module.exports.sendEmail = async (message, user) => {
     to: user.email,
     subject: message.subject,
     text: message.text,
-    html: `<h3>Hello ${user.name}!</h3><p>${message.html}</p>`,
+    html: `<h3>Hello ${user.full_name}!</h3><p>${message.html}</p>`,
   });
 
   console.log("Email sent successfully:", info.messageId);
