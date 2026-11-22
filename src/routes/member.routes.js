@@ -10,11 +10,14 @@ const {
 
 // te user gets all avalble subscriptons
 const memberRouter = Router();
+// 1. Public Route: Guests can view plans & available shift spots before signing up
+memberRouter.get("/plans", sendMembershipPlans);
 
-memberRouter.get("/allmembershipPlans", sendMembershipPlans);
-memberRouter.get("/mysubscriptions", sendMemberSubscriptions);
+// 3. Member Dashboard & Subscription Routes
+memberRouter.get("/my-subscriptions", sendMemberSubscriptions);
+memberRouter.get("/payment-history", sendHistory);
+memberRouter.get("/gym-pass", getGympass);
+
 memberRouter.post("/purchasePlan", purchaseForPlan);
-memberRouter.get("/paymentHistory", sendHistory);
-memberRouter.get("/gympass", getGympass);
 memberRouter.post("/requestRenewal", requestRenewal);
 module.exports = memberRouter;
