@@ -156,13 +156,13 @@ module.exports.refund = async ({ transactionId }) => {
 };
 // paymentid user id nad planid
 
-module.exports.decline = async ({ transactionId, method }, { id }) => {
+module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
   if (!transactionId || !id) {
     throw new BadRequestError("transactionId and user id are required");
   }
   const payment = await Payments.findOneAndUpdate(
     { transactionId, method },
-    { $set: { status: "failed", verifiedBy: id } },
+    { $set: { status: "failed", verifiedBy: id, reason } },
     { new: true },
   );
   if (!payment) {
