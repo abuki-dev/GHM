@@ -19,32 +19,40 @@ module.exports.createChekin = async (userId, chekinTime) => {
 
 module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
   //let us chek first if the user have the purchase
-  const isAnypurchase = await MembershipPurchase.findOne({
+  // purchases that already ended but are still marked active
+  const now = new Date();
+  await MembershipPurchase.updateMany(
+    { member_id: userId, status: "active", end_date: { $lte: now } },
+    { $set: { status: "expired" } },
+    { session },
+  );
+
+  const active = await MembershipPurchase.findOne({
     member_id: userId,
     status: "active",
   }).session(session);
-  if (!isAnypurchase) {
+  if (!active) {
     return "allowed";
   }
   // if the purchase is founded let us chek if the plan is the same
-  if (isAnypurchase.membership_plan_id === Plan.planId) {
+  if (active.membership_plan_id === Plan.planId) {
     // here we going to ectend it not more
-    const updatedDate = new Date(isAnypurchase.end_date);
+    const updatedDate = new Date(active.end_date);
     updatedDate.setDate(updatedDate.getDate() + Plan.duration_days);
-    isAnypurchase.end_date = updatedDate;
-    await isAnypurchase.save({ session });
+    active.end_date = updatedDate;
+    await active.save({ session });
     return "extended";
   }
   // if not same let use chake the remaining dates
   const remainigDate = Math.ceil(
-    (isAnypurchase.end_date - new Date()) / (1000 * 60 * 60 * 24),
+    (active.end_date - now) / (1000 * 60 * 60 * 24),
   );
 
   if (remainigDate >= 0 && remainigDate <= 5) {
     // here we are bout to  expire the existign and
     // let us expire the existing purchase
-    isAnypurchase.status = "expired";
-    await isAnypurchase.save({ session });
+    active.status = "expired";
+    await active.save({ session });
     // then the user is procceded to create new purchase
     return "allowed";
   }
