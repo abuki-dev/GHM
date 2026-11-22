@@ -17,7 +17,7 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     {
       transactionId,
       category: "new",
-      status: { $in: ["pending", "processing"] },
+      status: { $in: ["pending"] },
     },
     { $set: { status: "processing", verifiedBy: id } },
     { new: true },
@@ -45,7 +45,7 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     }
     const session = await startSession();
 
-    session
+    const result = await session
       .withTransaction(async () => {
         const result = await isPurchaseaAllowed(user.userId, plan, session);
         if (result !== "allowed") {
@@ -77,11 +77,11 @@ module.exports.approve = async ({ transactionId }, { id }) => {
             payment.verifiedBy = staffId;
             payment.refundReason = "Shift is full";
             payment.refundRequestedAt = new Date();
-            await payment.save();
+            await payment.save({ session });
 
-            throw new BadRequestError(
-              "Shift is full. This payment requires a refund.",
-            );
+            return {
+              message: "Shift is full. This payment requires a refund.",
+            };
           }
         }
 
@@ -92,15 +92,17 @@ module.exports.approve = async ({ transactionId }, { id }) => {
         );
 
         const membershipPurchase = await MembershipPurchase.create(
-          {
-            member_id: payment.userId || payment.member_id,
-            membership_plan_id: payment.planId || payment.membership_plan_id,
-            payment_id: payment._id.toString(),
-            start_date: startDate,
-            end_date: endDate,
-            status: "active",
-            shiftId: plan.shiftId || null,
-          },
+          [
+            {
+              member_id: payment.userId || payment.member_id,
+              membership_plan_id: payment.planId || payment.membership_plan_id,
+              payment_id: payment._id.toString(),
+              start_date: startDate,
+              end_date: endDate,
+              status: "active",
+              shiftId: plan.shiftId || null,
+            },
+          ],
           { session },
         );
 
@@ -112,10 +114,11 @@ module.exports.approve = async ({ transactionId }, { id }) => {
       .finally(async () => {
         await session.endSession();
       });
+    return result;
   } catch (error) {
     payment.status = "pending";
     await payment.save();
-    throw new error(`Error processing payment approval: ${error.message}`);
+    throw error;
   }
 };
 module.exports.refund = async ({ transactionId }) => {
