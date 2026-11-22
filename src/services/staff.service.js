@@ -6,7 +6,7 @@ const {
   Users,
   MembershipPurchase,
 } = require("../migrations");
-const { BadRequestError, ConflictError } = require("../utils/app.errors");
+const { BadRequestError } = require("../utils/app.errors");
 const { isPurchaseaAllowed } = require("../utils/helpers");
 
 module.exports.approve = async ({ transactionId }, { id }) => {
@@ -43,6 +43,11 @@ module.exports.approve = async ({ transactionId }, { id }) => {
     if (!plan) {
       throw new BadRequestError("Membership Plan Not Found");
     }
+    if (payment.amount !== plan.price) {
+      throw new BadRequestError(
+        `Amount ${payment.amount} does not match the plan price ${plan.price}`,
+      );
+    }
     const session = await startSession();
 
     const result = await session
@@ -77,8 +82,19 @@ module.exports.approve = async ({ transactionId }, { id }) => {
           }
         }
         const allowed = await isPurchaseaAllowed(user.userId, plan, session);
-        if (allowed !== "allowed") {
-          throw new ConflictError("the user already have exxisting purchase ");
+        if (allowed === "extended") {
+          return { message: "the purchase has been extended scuccessfully" };
+        }
+        if (allowed === "notallowed") {
+          payment.status = "refund_pending";
+          payment.verifiedBy = staffId;
+          payment.refundReason = "Purchase not allowed";
+          payment.refundRequestedAt = new Date();
+          await payment.save({ session });
+
+          return {
+            message: "Purchase not allowed. This payment requires a refund.",
+          };
         }
 
         const now = new Date();
@@ -153,7 +169,7 @@ module.exports.sendPayments = async (page = 1) => {
   const skip = (currentPage - 1) * limit;
   const filteredPayments = await Payments.aggregate([
     { $sort: { date: -1 } },
-    { $match: { status: { $in: ["pending", "processing"] }, category: "new" } },
+    { $match: { status: { $in: ["pending"] }, category: "new" } },
     { $skip: skip },
     { $limit: limit },
 

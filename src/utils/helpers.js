@@ -34,6 +34,7 @@ module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
   if (!active) {
     return "allowed";
   }
+  console.log(active);
   // if the purchase is founded let us chek if the plan is the same
   if (active.membership_plan_id === Plan.planId) {
     // here we going to ectend it not more
