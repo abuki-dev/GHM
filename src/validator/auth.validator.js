@@ -106,9 +106,7 @@ const validateTransactionId = [
   body("transactionId")
     .trim()
     .notEmpty()
-    .withMessage("TransactionId can't be empty")
-    .isMongoId()
-    .withMessage("Invalid transaction Id format"),
+    .withMessage("TransactionId can't be empty"),
 ];
 module.exports = {
   ValidateRegister,
