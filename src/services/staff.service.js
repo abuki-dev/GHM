@@ -47,11 +47,6 @@ module.exports.approve = async ({ transactionId }, { id }) => {
 
     const result = await session
       .withTransaction(async () => {
-        const result = await isPurchaseaAllowed(user.userId, plan, session);
-        if (result !== "allowed") {
-          throw new ConflictError("the user already have exxisting purchase ");
-        }
-
         if (plan.tier !== "normal") {
           const shift = await Shifts.findOne({ shiftId: plan.shiftId });
           if (!shift) {
@@ -63,14 +58,11 @@ module.exports.approve = async ({ transactionId }, { id }) => {
           }).select("planId");
 
           const planIds = plansOnShift.map((item) => item.planId);
-          const occupiedSpots = await MembershipPurchase.countDocuments(
-            {
-              membership_plan_id: { $in: planIds },
-              status: "active",
-              end_date: { $gt: new Date() },
-            },
-            { session },
-          );
+          const occupiedSpots = await MembershipPurchase.countDocuments({
+            membership_plan_id: { $in: planIds },
+            status: "active",
+            end_date: { $gt: new Date() },
+          }).session(session);
 
           if (occupiedSpots >= shift.max_capacity) {
             payment.status = "refund_pending";
@@ -84,6 +76,10 @@ module.exports.approve = async ({ transactionId }, { id }) => {
             };
           }
         }
+        const allowed = await isPurchaseaAllowed(user.userId, plan, session);
+        if (allowed !== "allowed") {
+          throw new ConflictError("the user already have exxisting purchase ");
+        }
 
         const now = new Date();
         const startDate = now;
@@ -91,7 +87,7 @@ module.exports.approve = async ({ transactionId }, { id }) => {
           now.getTime() + plan.duration_days * 24 * 60 * 60 * 1000,
         );
 
-        const membershipPurchase = await MembershipPurchase.create(
+        const [membershipPurchase] = await MembershipPurchase.create(
           [
             {
               member_id: payment.userId || payment.member_id,
