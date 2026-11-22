@@ -16,32 +16,45 @@ const {
   validateTransactionId,
 } = require("../validator/auth.validator");
 const { register } = require("../controllers/auth.controller");
+// 2. Member Account Creation
 staffRouter.post(
-  "/createmember",
+  "/create-member",
   ValidateRegister,
   validatemembrData,
   handleValidationErrors,
   register,
-); // use the auth controller to register a new member account
-staffRouter.get("/payment", getPendingPayments);
-staffRouter.post(
-  "/approvepayment",
+);
+
+// 3. Payment & Renewal Management
+staffRouter.get("/payments", getPendingPayments);
+staffRouter.get("/renewal-requests", renewalRequests);
+
+staffRouter.patch(
+  "/approve-payment",
   validateTransactionId,
   handleValidationErrors,
   approvePayment,
 );
-staffRouter.post(
-  "/declinePayment",
+
+staffRouter.patch(
+  "/decline-payment",
   validateTransactionId,
   handleValidationErrors,
   declinePayment,
 );
-staffRouter.post("/refundPayment", markPaymentRefunded);
+
 staffRouter.patch(
-  "/approveRenewal",
+  "/refund-payment",
+  validateTransactionId,
+  handleValidationErrors,
+  markPaymentRefunded,
+);
+
+staffRouter.patch(
+  "/approve-renewal",
   validateTransactionId,
   handleValidationErrors,
   approveRenewal,
 );
-staffRouter.get("/renewalRequests", renewalRequests);
+
 module.exports = staffRouter;
