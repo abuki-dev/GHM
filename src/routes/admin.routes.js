@@ -41,8 +41,8 @@ adminRoutes.post(
   handleValidationErrors,
   createTraining,
 );
-adminRoutes.delete("/deletetraning/:trainingId", deleteTraining);
-adminRoutes.delete("/deletePlan/:planId", deleteMembershipPlan);
+adminRoutes.delete("/deletetraning", deleteTraining);
+adminRoutes.delete("/deletePlan", deleteMembershipPlan);
 adminRoutes.post("/createshift", createShifts);
 adminRoutes.post(
   "/createMembershipPlan",
@@ -51,7 +51,7 @@ adminRoutes.post(
   handleValidationErrors,
   createMembershipPlan,
 );
-adminRoutes.delete("/deleteshift/:shiftId", deleteShifts);
+adminRoutes.delete("/deleteshift", deleteShifts);
 // get all users
 // get all members with email
 // get all tarinig

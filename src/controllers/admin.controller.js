@@ -19,7 +19,7 @@ module.exports.createTraining = async (req, res, next) => {
 };
 module.exports.deleteTraining = async (req, res, next) => {
   try {
-    const result = await removetraining(req.params);
+    const result = await removetraining(req.query);
     res.status(200).json({ message: "training deleted successfully" }, result);
   } catch (err) {
     next(err);
@@ -37,8 +37,7 @@ module.exports.createMembershipPlan = async (req, res, next) => {
 };
 module.exports.deleteMembershipPlan = async (req, res, next) => {
   try {
-    const { planId } = req.params;
-    const removeMembershipPlan = await removePlan(planId);
+    const removeMembershipPlan = await removePlan(req.query);
     res.status(200).json({
       message: "membership Plan deleted successfully",
       removeMembershipPlan,

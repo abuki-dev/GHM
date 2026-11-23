@@ -31,6 +31,11 @@ const membershipPurchaseSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    shiftId: {
+      type: String,
+      ref: "shifts",
+      index: true,
+    },
   },
   { timestamps: true },
 );
