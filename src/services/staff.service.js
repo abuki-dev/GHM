@@ -56,10 +56,11 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
     const result = await session
       .withTransaction(async () => {
         if (plan.tier !== "normal") {
-          const shift = await Shifts.findOne({
-            shiftId: plan.shiftId,
-            $inc: { version: 1 },
-          }).session(session);
+          const shift = await Shifts.findOneAndUpdate(
+            { shiftId: plan.shiftId }, // 1. filter: which shift
+            { $inc: { version: 1 } }, // 2. update: add 1 to version
+            { session, new: true }, // 3. run inside the transaction, return the updated shift
+          );
           if (!shift) {
             throw new BadRequestError("Shift not found");
           }
@@ -91,6 +92,9 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
         }
         const allowed = await isPurchaseaAllowed(user.userId, plan, session);
         if (allowed === "extended") {
+          payment.status = "verified";
+          payment.verifiedBy = staffId;
+          await payment.save({ session });
           return { message: "the purchase has been extended scuccessfully" };
         }
         if (allowed === "notallowed") {
@@ -161,7 +165,7 @@ module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
     throw new BadRequestError("transactionId and user id are required");
   }
   const payment = await Payments.findOneAndUpdate(
-    { transactionId, method },
+    { transactionId, method, status: { $in: ["pending", "processing"] } },
     { $set: { status: "failed", verifiedBy: id, reason } },
     { new: true },
   );
@@ -219,14 +223,14 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   });
   if (!membershipPurchase) {
     payment.status = "refund_pending";
-    await payment.save();
+    await payment.save({ session });
     throw new BadRequestError("Active membership purchase not found");
   }
 
   if (membershipPurchase.status == "expired") {
     payment.category = "new";
     payment.status = "pending";
-    await payment.save();
+    await payment.save({ session });
     return {
       message:
         "Membership has expired. This payment will be treated as a new purchase.",
@@ -236,12 +240,12 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   const plan = await MembershipPlans.findOne({ planId: payment.planId });
   if (!plan) {
     payment.status = "refund_pending";
-    await payment.save();
+    await payment.save({ session });
     throw new BadRequestError("Membership Plan Not Found");
   }
   if (payment.amount !== plan.price) {
     payment.status = "refund_pending";
-    await payment.save();
+    await payment.save({ session });
     return {
       message: `Amount ${payment.amount} does not match the plan price ${plan.price}. This payment requires a refund.`,
     };
@@ -256,7 +260,7 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
         );
 
         membershipPurchase.end_date = newEndDate;
-        await membershipPurchase.save();
+        await membershipPurchase.save({ session });
         payment.status = "verified";
         payment.verifiedBy = id;
         await payment.save({ session });

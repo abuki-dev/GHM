@@ -159,7 +159,7 @@ module.exports.newMembershipPlan = async ({
     duration_days,
     tier,
     price,
-    trainingId,
+    training_id: trainingId,
     shiftId,
   });
   if (tier === "normal") {
