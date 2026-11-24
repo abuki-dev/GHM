@@ -46,6 +46,8 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
     }
     if (payment.amount !== plan.price) {
       payment.status = "refund_pending";
+      payment.verifiedBy = staffId;
+      payment.reason = "Amount does not match the plan price";
       await payment.save();
       return {
         message: `Amount ${payment.amount} does not match the plan price ${plan.price}. This payment requires a refund.`,
@@ -100,8 +102,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
         if (allowed === "notallowed") {
           payment.status = "refund_pending";
           payment.verifiedBy = staffId;
-          payment.refundReason = "Purchase not allowed";
-          payment.refundRequestedAt = new Date();
+          payment.reason = "Purchase not allowed. For the user";
           await payment.save({ session });
 
           return {
@@ -132,6 +133,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
 
         payment.status = "verified";
         payment.verifiedBy = staffId;
+        payment.reason = "Payment verified successfully";
         await payment.save({ session });
         return { payment, membershipPurchase };
       })
@@ -140,8 +142,10 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
       });
     return result;
   } catch (error) {
-    payment.status = "pending";
-    await payment.save();
+    await Payments.updateOne(
+      { _id: payment._id, status: "processing" },
+      { $set: { status: "pending" } },
+    );
     throw error;
   }
 };
@@ -165,10 +169,12 @@ module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
     throw new BadRequestError("transactionId and user id are required");
   }
   const payment = await Payments.findOneAndUpdate(
-    { transactionId, method, status: { $in: ["pending", "processing"] } },
+    { transactionId, method, status: { $in: ["pending"] } },
     { $set: { status: "failed", verifiedBy: id, reason } },
     { new: true },
   );
+  payment.reason = "Invalid payment details or amount mismatch";
+  await payment.save();
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
@@ -220,14 +226,17 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
     member_id: payment.userId,
     membership_plan_id: payment.planId,
     status: { $in: ["expired", "active"] },
-  });
+  }).sort({ end_date: -1 });
   if (!membershipPurchase) {
     payment.status = "refund_pending";
     await payment.save({ session });
     throw new BadRequestError("Active membership purchase not found");
   }
 
-  if (membershipPurchase.status == "expired") {
+  if (
+    membershipPurchase.status === "expired" ||
+    membershipPurchase.end_date < new Date()
+  ) {
     payment.category = "new";
     payment.status = "pending";
     await payment.save({ session });
@@ -276,9 +285,10 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
       });
     return result;
   } catch (error) {
-    payment.status = "pending";
-    payment.verifiedBy = id;
-    await payment.save();
+    await Payments.updateOne(
+      { _id: payment._id, status: "processing" },
+      { $set: { status: "pending" } },
+    );
     throw error;
   }
 };

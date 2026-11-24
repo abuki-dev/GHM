@@ -2,7 +2,7 @@ const {
   newtraining,
   newshift,
   removeshift,
-  removetraining,
+  removeTraining,
   newMembershipPlan,
 } = require("./admin.service");
 const { insertUser, loginUser, createStandard } = require("./auth.service");
@@ -29,9 +29,9 @@ module.exports = {
   newtraining,
   newshift,
   removeshift,
-  removetraining,
+  removeTraining,
   newMembershipPlan,
   approve,
   generateUserSession,
-  generateGympass
+  generateGympass,
 };
