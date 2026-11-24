@@ -2,7 +2,7 @@ const {
   newtraining,
   newshift,
   removeshift,
-  removetraining,
+  removeTraining,
   newMembershipPlan,
 } = require("../services");
 const { removePlan } = require("../services/admin.service");
@@ -19,7 +19,7 @@ module.exports.createTraining = async (req, res, next) => {
 };
 module.exports.deleteTraining = async (req, res, next) => {
   try {
-    const result = await removetraining(req.query);
+    const result = await removeTraining(req.query);
     res.status(200).json({ message: "training deleted successfully" }, result);
   } catch (err) {
     next(err);
