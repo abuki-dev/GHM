@@ -8,7 +8,6 @@ const membershipPurchaseSchema = new mongoose.Schema(
       type: String,
       ref: "users",
       required: true,
-      index: true,
     },
     membership_plan_id: {
       type: String,

@@ -5,7 +5,7 @@ const authRouter = require("./auth.router");
 const memebrRouter = require("./member.routes");
 const staffRouter = require("./staff.routes");
 const adminRoutes = require("./admin.routes");
-const trainerRouter = require("./trainer.router");
+const trainerRouter = require("./trainer.routes");
 
 router.get("/health", (req, res) => res.json({ status: "ok" }));
 router.get("/me", authenticate, (req, res) => res.json({ user: req.user }));
