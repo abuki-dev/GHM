@@ -9,10 +9,8 @@ const { removePlan } = require("../services/admin.service");
 
 module.exports.createTraining = async (req, res, next) => {
   try {
-    const training = await newtraining(req.body);
-    res
-      .status(201)
-      .json({ message: "training created successfully", training });
+    const result = await newtraining(req.body);
+    res.status(201).json(result);
   } catch (err) {
     next(err);
   }
@@ -20,36 +18,31 @@ module.exports.createTraining = async (req, res, next) => {
 module.exports.deleteTraining = async (req, res, next) => {
   try {
     const result = await removeTraining(req.query);
-    res.status(200).json({ message: "training deleted successfully" }, result);
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
 };
 module.exports.createMembershipPlan = async (req, res, next) => {
   try {
-    const membershipPlan = await newMembershipPlan(req.body);
-    res
-      .status(201)
-      .json({ message: "MembershipPlan created successfully", membershipPlan });
+    const result = await newMembershipPlan(req.body);
+    res.status(201).json(result);
   } catch (err) {
     next(err);
   }
 };
 module.exports.deleteMembershipPlan = async (req, res, next) => {
   try {
-    const removeMembershipPlan = await removePlan(req.query);
-    res.status(200).json({
-      message: "membership Plan deleted successfully",
-      removeMembershipPlan,
-    });
+    const result = await removePlan(req.query);
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }
 };
 module.exports.createShifts = async (req, res, next) => {
   try {
-    const shift = await newshift(req.body);
-    res.status(201).json({ message: "shift successfully", shift });
+    const result = await newshift(req.body);
+    res.status(201).json(result);
   } catch (err) {
     next(err);
   }
@@ -57,8 +50,8 @@ module.exports.createShifts = async (req, res, next) => {
 
 module.exports.deleteShifts = async (req, res, next) => {
   try {
-    const shift = await removeshift(req.query);
-    res.status(200).json({ message: "shift successfully Deleted ", shift });
+    const result = await removeshift(req.query);
+    res.status(200).json(result);
   } catch (err) {
     next(err);
   }

@@ -5,8 +5,9 @@ const {
   Users,
   Trainer,
   MembershipPurchase,
+  Payments,
 } = require("../migrations");
-const { BadRequestError } = require("../utils/app.errors");
+const { BadRequestError, ConflictError } = require("../utils/app.errors");
 const { formatHours } = require("../utils/helpers");
 
 module.exports.newtraining = async function ({
@@ -21,7 +22,7 @@ module.exports.newtraining = async function ({
     level: level,
     category: category,
   });
-  return training;
+  return { message: "Training created successfully", success: true, training };
 };
 
 module.exports.newshift = async function ({
@@ -37,28 +38,40 @@ module.exports.newshift = async function ({
     throw new BadRequestError("Required fileds are empty try gan");
   }
 
-  const istrainerexist = await Trainer.findOne({
-    trainerId: trainerId,
-  });
+  const istrainerexist = await Trainer.findOne({ trainerId });
+  if (!istrainerexist)
+    throw new BadRequestError("Trainer Id is invalid, try again");
   const isValidUser = await Users.findOne({
     userId: istrainerexist.userId,
     role: "trainer",
   });
-  if (!istrainerexist || !isValidUser) {
-    throw new BadRequestError("Trainer Id is invalid try agan ");
-  }
-  const foramedTime = formatHours(startTime);
-  const foramedTime2 = formatHours(endTime);
+  if (!isValidUser)
+    throw new BadRequestError("Trainer Id is invalid, try again");
+
+  const start = formatHours(startTime);
+  const end = formatHours(endTime);
+  // same trainer OR same room, same days, overlapping time
+  const clash = await Shifts.findOne({
+    $or: [{ trainerId }, { room }],
+    days_of_week: { $in: days_of_week },
+    startTime: { $lt: end }, // Existing shift starts BEFORE new shift ends
+    endTime: { $gt: start },
+  });
+  if (clash)
+    throw new BadRequestError(
+      `This overlaps shift ${clash.shiftId} (same trainer or room)`,
+    );
+
   const shift = await Shifts.create({
     trainerId: trainerId,
     period: period,
-    startTime: foramedTime,
-    endTime: foramedTime2,
+    startTime: start,
+    endTime: end,
     days_of_week: days_of_week,
     max_capacity: max_capacity,
     room: room,
   });
-  return shift;
+  return { message: "Shift created successfully", success: true, shift };
 };
 module.exports.removeshift = async function ({ shiftId }) {
   //first find all purchases in this shift that are actively attended by teh memebere
@@ -81,7 +94,7 @@ module.exports.removeshift = async function ({ shiftId }) {
   }
   //// 3. Clean up (or deactivate) any MembershipPlans tied to this deleted shift
   //await MembershipPlans.deleteMany({ shiftId });
-  return deleted;
+  return { message: "Shift deleted successfully", success: true };
 };
 module.exports.removeTraining = async function ({ trainingId }) {
   if (!trainingId) {
@@ -119,7 +132,7 @@ module.exports.removeTraining = async function ({ trainingId }) {
   // 5. Safe to delete the training program
   await Training.deleteOne({ trainingId });
 
-  return { message: "Training deleted successfully", training };
+  return { message: "Training deleted successfully", success: true };
 };
 module.exports.newMembershipPlan = async ({
   title,
@@ -167,9 +180,35 @@ module.exports.newMembershipPlan = async ({
   }
   await newPlan.save();
 
-  return newPlan;
+  return {
+    message: "Membership plan created successfully",
+    success: true,
+    plan: newPlan,
+  };
 };
 module.exports.removePlan = async function ({ planId }) {
-  const deletePlan = await MembershipPlans.deleteOne({ planId });
-  return deletePlan;
+  if (!planId) throw new BadRequestError("planId is required");
+  const plan = await MembershipPlans.findOne({ planId });
+  if (!plan) throw new BadRequestError("Plan not found");
+
+  const inUse = await MembershipPurchase.exists({
+    membership_plan_id: planId,
+    status: { $in: ["active", "frozen"] },
+  });
+  if (inUse) {
+    throw new ConflictError(
+      "Cannot delete: members currently have active or frozen subscriptions on this plan.",
+    );
+  }
+  const waiting = await Payments.exists({
+    planId,
+    status: { $in: ["pending", "processing", "refund_pending"] },
+  });
+  if (waiting) {
+    throw new ConflictError(
+      "Cannot delete: there are unprocessed payments for this plan.",
+    );
+  }
+  await MembershipPlans.deleteOne({ planId });
+  return { message: "Plan deleted successfully", success: true };
 };
