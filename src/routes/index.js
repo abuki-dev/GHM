@@ -14,6 +14,7 @@ router.use("/member", requireRole("member", "admin"), memebrRouter);
 
 router.use("/staff", requireRole("staff", "admin"), staffRouter);
 router.use("/admin", requireRole("admin"), adminRoutes);
+router.use("/trainer", requireRole("trainer","admin"),trainerRouter)
 module.exports = router;
 // validate transaction id at the staff service when approving and declining
 // decline verfied apayemt issue
