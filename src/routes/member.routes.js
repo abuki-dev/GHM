@@ -6,6 +6,13 @@ const {
   sendHistory,
   getGympass,
   requestRenewal,
+  getMyProfile,
+  updateMyProfile,
+  getMyAttendance,
+  cancelMyPayment,
+  freezeMyMembership,
+  resumeMyMembership,
+  feedbacks,
 } = require("../controllers/members.controller");
 
 // te user gets all avalble subscriptons
@@ -20,4 +27,12 @@ memberRouter.get("/gym-pass", getGympass);
 
 memberRouter.post("/purchasePlan", purchaseForPlan);
 memberRouter.post("/requestRenewal", requestRenewal);
+
+memberRouter.get("/me", getMyProfile);
+memberRouter.patch("/me", updateMyProfile);
+memberRouter.get("/attendance", getMyAttendance);
+memberRouter.delete("/payments/:id", cancelMyPayment);
+memberRouter.post("/membership/freeze", freezeMyMembership);
+memberRouter.post("/membership/resume", resumeMyMembership);
+memberRouter.post("/feedback", feedbacks)
 module.exports = memberRouter;

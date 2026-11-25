@@ -5,12 +5,18 @@ const {
   Payments,
   Shifts,
   Sessions,
+  Users,
+  Checkins,
 } = require("../migrations");
 const { BadRequestError, ConflictError } = require("../utils/app.errors");
 const { toMinutes } = require("../utils/helpers");
 const env = require("../config/env");
+const { expireStalePurchase, getActivePurchase } = require("./puchase.rules");
 
-module.exports.getMembershipPlans = async (page = 1) => {
+module.exports.getMembershipPlans = async (page = 1, member_id = null) => {
+  const currentPurchase = member_id ? await getActivePurchase(member_id) : null;
+  const currentPlanId = currentPurchase?.membership_plan_id ?? null;
+  const total = await MembershipPlans.countDocuments({});
   const currentPage = Math.max(1, parseInt(page, 10) || 1);
   const limit = 5;
   const skip = (currentPage - 1) * limit;
@@ -25,7 +31,6 @@ module.exports.getMembershipPlans = async (page = 1) => {
     { $sort: { planId: 1 } },
     { $skip: skip },
     { $limit: limit },
-
     // 2. Join Training Category
     {
       $lookup: {
@@ -135,12 +140,17 @@ module.exports.getMembershipPlans = async (page = 1) => {
         shiftEndTime: "$shift.endTime",
         shiftMaxCapacity: "$shift.max_capacity",
         availableSpots: {
-          $subtract: [
-            { $ifNull: ["$shift.max_capacity", 0] },
+          $max: [
+            0,
             {
-              $ifNull: [
-                { $arrayElemAt: ["$occupancy.totalActiveCount", 0] },
-                0,
+              $subtract: [
+                { $ifNull: ["$shift.max_capacity", 0] },
+                {
+                  $ifNull: [
+                    { $arrayElemAt: ["$occupancy.totalActiveCount", 0] },
+                    0,
+                  ],
+                },
               ],
             },
           ],
@@ -154,25 +164,54 @@ module.exports.getMembershipPlans = async (page = 1) => {
     },
   ]);
 
-  return allPlans;
+  return { items: allPlans, total, page: currentPage, limit, currentPlanId };
 };
-module.exports.getMemberSubscriptions = async ({ id }) => {
-  console.log("Getting subscriptions for userId:", id);
-  const allPuschases = await MembershipPurchase.aggregate([
-    { $sort: { member_id: 1 } },
-    { $match: { member_id: id } },
-    {
-      $project: {
-        _id: 0,
-        membership_plan_id: 1,
-        payment_id: 1,
-        start_date: 1,
-        end_date: 1,
-        status: 1,
+module.exports.getMemberSubscriptions = async ({ id }, page = 1) => {
+  const currentPage = Math.max(1, Number.parseInt(page, 10) || 1);
+  const limit = 10;
+  const now = new Date();
+
+  const [items, total] = await Promise.all([
+    MembershipPurchase.aggregate([
+      { $match: { member_id: id } },
+      { $sort: { end_date: -1 } },
+      { $skip: (currentPage - 1) * limit },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "membershipplans",
+          localField: "membership_plan_id",
+          foreignField: "planId",
+          as: "plan",
+        },
       },
-    },
+      { $unwind: { path: "$plan", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          purchaseId: 1,
+          membership_plan_id: 1,
+          planTitle: "$plan.title",
+          planTier: "$plan.tier",
+          start_date: 1,
+          end_date: 1,
+          status: 1,
+          daysRemaining: {
+            $max: [
+              0,
+              {
+                $ceil: {
+                  $divide: [{ $subtract: ["$end_date", now] }, 86_400_000],
+                },
+              },
+            ],
+          },
+        },
+      },
+    ]),
+    MembershipPurchase.countDocuments({ member_id: id }),
   ]);
-  return allPuschases;
+
+  return { items, total, page: currentPage, limit };
 };
 module.exports.savePaymentInfos = async (
   { planId, amount, transactionId, method },
@@ -180,32 +219,67 @@ module.exports.savePaymentInfos = async (
 ) => {
   //check the avalable spots by using thepna id iside teh ouchases
   if (
-    !planId ||
-    !amount ||
+    typeof planId !== "string" ||
+    !planId.trim() ||
     !transactionId ||
     !Number.isFinite(amount) ||
     amount <= 0 ||
-    transactionId.trim() === "" ||
-    isNaN(planId) === ""
+    trans() === "" ||
+    !["CBE", "BOA", "Abissinia", "telebirr", "manual"].includes(method)
   ) {
     throw new BadRequestError(
       "Missing required fields: planId, amount, or transactionId",
     );
   }
-  const paymentExists = await Payments.findOne({ transactionId });
-  if (paymentExists) {
+
+  await expireStalePurchase(id);
+  const [plan, openPayment] = await Promise.all([
+    MembershipPlans.findOne({ planId: planId.trim() }),
+    Payments.findOne({
+      userId: id,
+      status: { $in: ["pending", "processing"] },
+    }),
+  ]);
+
+  if (!plan) throw new BadRequestError("Membership plan not found.");
+  if (amount !== plan.price) {
+    throw new BadRequestError("Payment amount does not match the plan price.");
+  }
+  if (openPayment) {
+    throw new ConflictError("You already have a payment awaiting review.");
+  }
+
+  const activePurchase = await getActivePurchase(id);
+  if (activePurchase && activePurchase.status === "frozen") {
+    throw new ConflictError("Resume your frozen membership before purchasing.");
+  }
+  if (activePurchase && activePurchase.membership_plan_id !== plan.planId) {
     throw new ConflictError(
-      "Payment with this transactionId already exists and used",
+      "You already have an active membership on a different plan.",
     );
   }
+
+  const duplicate = await Payments.findOne({ transactionId, method });
+  const trans = transactionId.trim();
+  if (duplicate) {
+    throw new ConflictError("This transaction has already been submitted.");
+  }
+
   await Payments.create({
-    planId,
+    planId: plan.planId,
     amount,
-    transactionId,
+    transactionId: trans(),
     userId: id,
     method,
+    category: activePurchase ? "renew" : "new",
   });
-  return { message: `Sucussfully payed ${amount} for plan ${planId}` };
+
+  return {
+    message: activePurchase
+      ? "Renewal payment submitted for staff review."
+      : "Purchase payment submitted for staff review.",
+    category: activePurchase ? "renew" : "new",
+  };
 };
 module.exports.getUsrePaymentHistory = async ({ id }) => {
   console.log("Getting payment history for userId:", id);
@@ -248,11 +322,22 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   // if expoted throm error the that tg
   let decoded;
   // If someone tampered with userId or purchaseId, jwt.verify() throws an error!
-  decoded = verify(qrToken, env.GYMPASS_SECRET);
-  const { u: userId, p: purchaseId } = decoded;
+  try {
+    decoded = verify(qrToken, env.GYMPASS_SECRET);
+  } catch {
+    throw new BadRequestError("QR invalid or expired.");
+  }
+  const { u: userId, p: purchaseId ,typ} = decoded;
+  if (typ !== "gympass") {
+    throw new BadRequestError("QR invalid or expired");
+  }
+  await expireStalePurchase(userId);
   const existingPurchase = await MembershipPurchase.findOne({
     purchaseId,
     member_id: userId,
+    status: "active",
+    start_date: { $lte: new Date() },
+    end_date: { $gt: new Date() },
   });
   if (!existingPurchase) {
     throw new BadRequestError(
@@ -363,36 +448,26 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   });
   return { message: "Session created successfully", session: createdSession };
 };
-module.exports.generateGympass = async ({ id, purchaseId }) => {
-  if (!purchaseId) {
-    throw new BadRequestError("PurchaseId is required");
-  }
-
+module.exports.generateGympass = async ({ id }) => {
+  const purchase = await getActivePurchase(id);
   const now = new Date();
-  const activePurchase = await MembershipPurchase.findOne({
-    purchaseId,
-    member_id: id,
-    status: "active",
-    start_date: { $lte: now },
-    end_date: { $gt: new Date() },
-  });
 
-  if (!activePurchase) {
+  if (
+    !purchase ||
+    purchase.status !== "active" ||
+    purchase.start_date > now ||
+    purchase.end_date <= now
+  ) {
     throw new BadRequestError("No active subscription found.");
   }
 
-  // 2. Calculate exact seconds left until end_date so the QR expires at the exact second the plan ends
-  const secondsRemaining = Math.floor(
-    (activePurchase.end_date.getTime() - now.getTime()) / 1000,
+  const qrToken = sign(
+    { u: id, p: purchase.purchaseId, typ: "gympass" },
+    env.GYMPASS_SECRET,
+    { expiresIn: 60 },
   );
 
-  // 3. Sign a compact JWT (keep keys short so the QR code squares stay big & easy to scan)
-  const qrToken = sign(
-    { u: id, p: activePurchase.purchaseId },
-    env.GYMPASS_SECRET,
-    { expiresIn: secondsRemaining },
-  );
-  return { qrToken: qrToken, exp: activePurchase.end_date };
+  return { qrToken, exp: new Date(Date.now() + 60_000) };
 };
 module.exports.createRenewalRequest = async (
   { planId, amount, transactionId, method },
@@ -430,4 +505,117 @@ module.exports.createRenewalRequest = async (
   return {
     message: `Successfully sent renewal for ${amount} for plan ${planId} pleas wait few business days for the payment to be processed.`,
   };
+};
+
+module.exports.getMyProfile = async ({ id }) => {
+  const user = await Users.findOne({ userId: id })
+    .select("userId full_name email phone gender age role")
+    .lean();
+
+  if (!user) throw new BadRequestError("Member not found.");
+  return user;
+};
+
+module.exports.updateMyProfile = async (
+  { full_name, phone, gender, age },
+  { id },
+) => {
+  const updates = {};
+  if (full_name !== undefined) updates.full_name = full_name;
+  if (phone !== undefined) updates.phone = phone;
+  if (gender !== undefined) updates.gender = gender;
+  if (age !== undefined) updates.age = age;
+
+  const user = await Users.findOneAndUpdate(
+    { userId: id, role: "member" },
+    { $set: updates },
+    { new: true, runValidators: true },
+  ).select("userId full_name email phone gender age role");
+
+  if (!user) throw new BadRequestError("Member not found.");
+  return user;
+};
+
+module.exports.getMyAttendance = async ({ id }, page = 1) => {
+  const currentPage = Math.max(1, Number.parseInt(page, 10) || 1);
+  const limit = 20;
+  const [items, total] = await Promise.all([
+    Checkins.find({ userId: id })
+      .sort({ checkinTime: -1 })
+      .skip((currentPage - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Checkins.countDocuments({ userId: id }),
+  ]);
+
+  return { items, total, page: currentPage, limit };
+};
+
+module.exports.cancelMyPayment = async ({ id }, paymentId) => {
+  const payment = await Payments.findOneAndUpdate(
+    { _id: paymentId, userId: id, status: "pending" },
+    { $set: { status: "cancelled" } },
+    { new: true },
+  );
+
+  if (!payment) {
+    throw new BadRequestError("Pending payment not found.");
+  }
+  return payment;
+};
+
+module.exports.freezeMyMembership = async ({ id }, days) => {
+  if (!Number.isInteger(days) || days < 1 || days > 30) {
+    throw new BadRequestError("Freeze duration must be from 1 to 30 days.");
+  }
+
+  const purchase = await getActivePurchase(id);
+  if (!purchase || purchase.status !== "active") {
+    throw new BadRequestError("No active membership can be frozen.");
+  }
+  if ((purchase.freezeDaysUsed || 0) + days > 30) {
+    throw new BadRequestError(
+      "This membership has reached its 30-day freeze limit.",
+    );
+  }
+
+  const now = new Date();
+  purchase.freezeUntil = new Date(now.getTime() + days * 86_400_000);
+  purchase.status = "frozen";
+  await purchase.save();
+  return purchase;
+};
+
+module.exports.resumeMyMembership = async ({ id }) => {
+  const purchase = await MembershipPurchase.findOne({
+    member_id: id,
+    status: "frozen",
+  });
+
+  if (!purchase) throw new BadRequestError("No frozen membership found.");
+
+  const now = new Date();
+  const frozenFrom = new Date(
+    purchase.freezeUntill.getTime() - 30 * 86_400_000,
+  );
+  const elapsed = Math.max(0, Math.min(now - frozenFrom, 30 * 86_400_000));
+  const elapsedDays = elapsed / 86_400_000;
+
+  purchase.end_date = new Date(purchase.end_date.getTime() + elapsed);
+  purchase.freezeDaysUsed = (purchase.freezeDaysUsed || 0) + elapsedDays;
+  purchase.freezeUntill = null;
+  purchase.status = "active";
+  await purchase.save();
+  return purchase;
+};
+module.exports.createFeedback = async ({ id }, { title, body }) => {
+  if (!title?.trim() || !body?.trim()) {
+    throw new BadRequestError("Title and feedback body are required.");
+  }
+
+  return Feedbacks.create({
+    userId: id,
+    title: title.trim(),
+    body: body.trim(),
+  });
 };
