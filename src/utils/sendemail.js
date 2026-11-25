@@ -1,14 +1,16 @@
 const { transporter } = require("../config/email");
+const env = require("../config/env");
 
 module.exports.sendEmail = async (message, user) => {
+  if (!user?.email) throw new Error("Cannot send email: recipient email is missing.");
+
   const info = await transporter.sendMail({
-    from: `Server Notification (No-Reply)" <Titians Gymr support team>`,
+    from: `"Titans Gym" <${env.EMAIL_USER}>`,
     to: user.email,
     subject: message.subject,
     text: message.text,
-    html: `<h3>Hello ${user.full_name}!</h3><p>${message.html}</p>`,
+    html: `<h3>Hello ${user.full_name || "member"}!</h3>${message.html}`,
   });
 
-  console.log("Email sent successfully:", info.messageId);
   return { success: true, messageId: info.messageId };
 };
