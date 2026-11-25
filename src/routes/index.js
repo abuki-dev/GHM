@@ -5,6 +5,7 @@ const authRouter = require("./auth.router");
 const memebrRouter = require("./member.routes");
 const staffRouter = require("./staff.routes");
 const adminRoutes = require("./admin.routes");
+const trainerRouter = require("./trainer.router");
 
 router.get("/health", (req, res) => res.json({ status: "ok" }));
 router.get("/me", authenticate, (req, res) => res.json({ user: req.user }));
@@ -14,7 +15,7 @@ router.use("/member", requireRole("member", "admin"), memebrRouter);
 
 router.use("/staff", requireRole("staff", "admin"), staffRouter);
 router.use("/admin", requireRole("admin"), adminRoutes);
-router.use("/trainer", requireRole("trainer","admin"),trainerRouter)
+router.use("/trainer", requireRole("trainer", "admin"), trainerRouter);
 module.exports = router;
 // validate transaction id at the staff service when approving and declining
 // decline verfied apayemt issue
