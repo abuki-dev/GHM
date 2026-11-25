@@ -15,8 +15,10 @@ const ValidateRegister = [
     .withMessage("Full name is required")
     .isLength({ min: 3 })
     .withMessage("Full name must be at least 3 characters long")
-    .isAlpha("en-US", { ignore: " " })
-    .withMessage("Full name must contain only letters and spaces")
+    .matches(/^[a-zA-Z\u1200-\u137F\s]+$/)
+    .withMessage(
+      "Full name must contain only English or Amharic letters and spaces",
+    )
     .escape(),
 
   body("email")

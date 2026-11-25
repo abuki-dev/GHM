@@ -4,8 +4,10 @@ const {
   MembershipPlans,
   Users,
   Trainer,
+  MembershipPurchase,
+  Payments,
 } = require("../migrations");
-const { BadRequestError } = require("../utils/app.errors");
+const { BadRequestError, ConflictError } = require("../utils/app.errors");
 const { formatHours } = require("../utils/helpers");
 
 module.exports.newtraining = async function ({
@@ -20,7 +22,7 @@ module.exports.newtraining = async function ({
     level: level,
     category: category,
   });
-  return training;
+  return { message: "Training created successfully", success: true, training };
 };
 
 module.exports.newshift = async function ({
@@ -36,39 +38,101 @@ module.exports.newshift = async function ({
     throw new BadRequestError("Required fileds are empty try gan");
   }
 
-  const istrainerexist = await Trainer.findOne({
-    trainerId: trainerId,
-  });
+  const istrainerexist = await Trainer.findOne({ trainerId });
+  if (!istrainerexist)
+    throw new BadRequestError("Trainer Id is invalid, try again");
   const isValidUser = await Users.findOne({
     userId: istrainerexist.userId,
     role: "trainer",
   });
-  if (!istrainerexist || isValidUser) {
-    throw new BadRequestError("Trainer Id is invalid try agan ");
-  }
-  const foramedTime = formatHours(startTime);
-  const foramedTime2 = formatHours(endTime);
+  if (!isValidUser)
+    throw new BadRequestError("Trainer Id is invalid, try again");
+
+  const start = formatHours(startTime);
+  const end = formatHours(endTime);
+  // same trainer OR same room, same days, overlapping time
+  const clash = await Shifts.findOne({
+    $or: [{ trainerId }, { room }],
+    days_of_week: { $in: days_of_week },
+    startTime: { $lt: end }, // Existing shift starts BEFORE new shift ends
+    endTime: { $gt: start },
+  });
+  if (clash)
+    throw new BadRequestError(
+      `This overlaps shift ${clash.shiftId} (same trainer or room)`,
+    );
+
   const shift = await Shifts.create({
     trainerId: trainerId,
     period: period,
-    startTime: foramedTime,
-    endTime: foramedTime2,
+    startTime: start,
+    endTime: end,
     days_of_week: days_of_week,
     max_capacity: max_capacity,
+    room: room,
   });
-  return shift;
+  return { message: "Shift created successfully", success: true, shift };
 };
 module.exports.removeshift = async function ({ shiftId }) {
-  const deleted = await Shifts.deleteOne({ shiftId });
-  return deleted;
-};
-module.exports.removetraining = async function ({ trainingId }) {
-  const training = await Training.findOneAndDelete({ trainingId });
+  //first find all purchases in this shift that are actively attended by teh memebere
+  // i fexist throw errrow there are active purchaaes exits
 
-  if (!training) {
-    throw new BadRequestError("training Program Not Found");
+  const isActive = Boolean(
+    await MembershipPurchase.exists({
+      shiftId,
+      status: { $in: ["active", "frozen"] },
+    }),
+  );
+  if (isActive) {
+    throw new BadRequestError(
+      `The shift is Already giving service to Users Try again `,
+    );
   }
-  return { message: "training deleted successsfully", training };
+  const deleted = await Shifts.deleteOne({ shiftId });
+  if (deleted.deletedCount == 0) {
+    throw new BadRequestError("the shift is not Founded in the Database");
+  }
+  //// 3. Clean up (or deactivate) any MembershipPlans tied to this deleted shift
+  //await MembershipPlans.deleteMany({ shiftId });
+  return { message: "Shift deleted successfully", success: true };
+};
+module.exports.removeTraining = async function ({ trainingId }) {
+  if (!trainingId) {
+    throw new BadRequestError("Training ID is required. Try again.");
+  }
+
+  // 1. Check if the training program actually exists first
+  const training = await Training.findOne({ trainingId });
+  if (!training) {
+    throw new BadRequestError("Training program not found.");
+  }
+
+  // 2. Get all planIds tied to this training in one clean array
+  const planIds = await MembershipPlans.distinct("planId", {
+    training_id: trainingId,
+  });
+
+  // 3. Single fast index check: does ANY active or frozen purchase use these plans?
+  if (planIds.length > 0) {
+    const hasActiveSubscribers = await MembershipPurchase.exists({
+      membership_plan_id: { $in: planIds },
+      status: { $in: ["active", "frozen"] },
+    });
+
+    if (hasActiveSubscribers) {
+      throw new BadRequestError(
+        "Cannot delete: members currently have active or frozen subscriptions on this training.",
+      );
+    }
+
+    // 4. Optional but recommended: deactivate or remove orphaned plans so nobody buys them
+    //await MembershipPlans.deleteMany({ planId: { $in: planIds } });
+  }
+
+  // 5. Safe to delete the training program
+  await Training.deleteOne({ trainingId });
+
+  return { message: "Training deleted successfully", success: true };
 };
 module.exports.newMembershipPlan = async ({
   title,
@@ -76,11 +140,16 @@ module.exports.newMembershipPlan = async ({
   duration_days,
   tier,
   price,
-  training_id,
+  trainingId,
   shiftId,
 }) => {
-  const trainigfound = await Training.findOne({ trainingId: training_id });
-  const shiftfound = await Shifts.findOne({ shiftId: shiftId });
+  if (!price || price <= 0 || isNaN(price)) {
+    throw new BadRequestError(
+      "Price must be a positive number greater than zero. Please provide a valid price.",
+    );
+  }
+  const trainigfound = await Training.findOne({ trainingId });
+  const shiftfound = await Shifts.findOne({ shiftId });
   if (!trainigfound || !shiftfound) {
     throw new BadRequestError(
       "Training program not found or Shift not founded.",
@@ -89,8 +158,8 @@ module.exports.newMembershipPlan = async ({
   // now let us cheke the tier vvip =25 peopeles vvip 5 peoples / shift
   // if the tier is normal just passit
   if (
-    (tier === "vip" && shiftfound.max_capacity !== 15) ||
-    (tier === "vvip" && shiftfound.max_capacity !== 5)
+    (tier === "vip" && shiftfound.max_capacity >= 15) ||
+    (tier === "vvip" && shiftfound.max_capacity >= 5)
   ) {
     throw new BadRequestError(
       `Error the shift and plan mismatched plan is ${tier} and shift capacity is ${shiftfound.max_capacity}`,
@@ -103,7 +172,7 @@ module.exports.newMembershipPlan = async ({
     duration_days,
     tier,
     price,
-    training_id,
+    training_id: trainingId,
     shiftId,
   });
   if (tier === "normal") {
@@ -111,9 +180,35 @@ module.exports.newMembershipPlan = async ({
   }
   await newPlan.save();
 
-  return newPlan;
+  return {
+    message: "Membership plan created successfully",
+    success: true,
+    plan: newPlan,
+  };
 };
 module.exports.removePlan = async function ({ planId }) {
-  const deletePlan = await MembershipPlans.deleteOne({ planId });
-  return deletePlan;
+  if (!planId) throw new BadRequestError("planId is required");
+  const plan = await MembershipPlans.findOne({ planId });
+  if (!plan) throw new BadRequestError("Plan not found");
+
+  const inUse = await MembershipPurchase.exists({
+    membership_plan_id: planId,
+    status: { $in: ["active", "frozen"] },
+  });
+  if (inUse) {
+    throw new ConflictError(
+      "Cannot delete: members currently have active or frozen subscriptions on this plan.",
+    );
+  }
+  const waiting = await Payments.exists({
+    planId,
+    status: { $in: ["pending", "processing", "refund_pending"] },
+  });
+  if (waiting) {
+    throw new ConflictError(
+      "Cannot delete: there are unprocessed payments for this plan.",
+    );
+  }
+  await MembershipPlans.deleteOne({ planId });
+  return { message: "Plan deleted successfully", success: true };
 };

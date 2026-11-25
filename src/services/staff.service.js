@@ -47,9 +47,12 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
     }
     if (payment.amount !== plan.price) {
       payment.status = "refund_pending";
+      payment.verifiedBy = staffId;
+      payment.reason = "Amount does not match the plan price";
       await payment.save();
       return {
         message: `Amount ${payment.amount} does not match the plan price ${plan.price}. This payment requires a refund.`,
+        success: false,
       };
     }
     const session = await startSession();
@@ -57,10 +60,11 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
     const result = await session
       .withTransaction(async () => {
         if (plan.tier !== "normal") {
-          const shift = await Shifts.findOne({
-            shiftId: plan.shiftId,
-            $inc: { version: 1 },
-          }).session(session);
+          const shift = await Shifts.findOneAndUpdate(
+            { shiftId: plan.shiftId }, // 1. filter: which shift
+            { $inc: { version: 1 } }, // 2. update: add 1 to version
+            { session, new: true }, // 3. run inside the transaction, return the updated shift
+          );
           if (!shift) {
             throw new BadRequestError("Shift not found");
           }
@@ -81,28 +85,34 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
           if (occupiedSpots >= shift.max_capacity) {
             payment.status = "refund_pending";
             payment.verifiedBy = staffId;
-            payment.refundReason = "Shift is full";
-            payment.refundRequestedAt = new Date();
+            payment.reason = "Shift is full. This payment requires a refund.";
             await payment.save({ session });
 
             return {
               message: "Shift is full. This payment requires a refund.",
+              success: false,
             };
           }
         }
         const allowed = await isPurchaseaAllowed(user.userId, plan, session);
         if (allowed === "extended") {
-          return { message: "the purchase has been extended scuccessfully" };
+          payment.status = "verified";
+          payment.verifiedBy = staffId;
+          await payment.save({ session });
+          return {
+            message: "the purchase has been extended scuccessfully",
+            success: true,
+          };
         }
         if (allowed === "notallowed") {
           payment.status = "refund_pending";
           payment.verifiedBy = staffId;
-          payment.refundReason = "Purchase not allowed";
-          payment.refundRequestedAt = new Date();
+          payment.reason = "Purchase not allowed. For the user";
           await payment.save({ session });
 
           return {
             message: "Purchase not allowed. This payment requires a refund.",
+            success: false,
           };
         }
 
@@ -129,16 +139,23 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
 
         payment.status = "verified";
         payment.verifiedBy = staffId;
+        payment.reason = "Payment verified successfully";
         await payment.save({ session });
-        return { payment, membershipPurchase };
+        return {
+          message:
+            "Payment verified successfully and membership purchase created.",
+          success: true,
+        };
       })
       .finally(async () => {
         await session.endSession();
       });
     return result;
   } catch (error) {
-    payment.status = "pending";
-    await payment.save();
+    await Payments.updateOne(
+      { _id: payment._id, status: "processing" },
+      { $set: { status: "pending" } },
+    );
     throw error;
   }
 };
@@ -153,7 +170,7 @@ module.exports.refund = async ({ transactionId }) => {
     throw new BadRequestError("Refund-pending payment not found");
   }
 
-  return payment;
+  return { message: "payment refunded successfully completed", success: true };
 };
 // paymentid user id nad planid
 
@@ -162,15 +179,18 @@ module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
     throw new BadRequestError("transactionId and user id are required");
   }
   const payment = await Payments.findOneAndUpdate(
-    { transactionId, method },
+    { transactionId, method, status: { $in: ["pending"] } },
     { $set: { status: "failed", verifiedBy: id, reason } },
     { new: true },
   );
+
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
+  payment.reason = "Invalid payment details or amount mismatch";
+  await payment.save();
 
-  return payment;
+  return { message: "Payment declined successfully", success: true };
 };
 module.exports.sendPayments = async (page = 1) => {
   const currentPage = Math.max(1, parseInt(page, 10) || 1);
@@ -217,14 +237,17 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
     member_id: payment.userId,
     membership_plan_id: payment.planId,
     status: { $in: ["expired", "active"] },
-  });
+  }).sort({ end_date: -1 });
   if (!membershipPurchase) {
     payment.status = "refund_pending";
     await payment.save();
     throw new BadRequestError("Active membership purchase not found");
   }
 
-  if (membershipPurchase.status == "expired") {
+  if (
+    membershipPurchase.status === "expired" ||
+    membershipPurchase.end_date < new Date()
+  ) {
     payment.category = "new";
     payment.status = "pending";
     await payment.save();
@@ -257,7 +280,7 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
         );
 
         membershipPurchase.end_date = newEndDate;
-        await membershipPurchase.save();
+        await membershipPurchase.save({ session });
         payment.status = "verified";
         payment.verifiedBy = id;
         await payment.save({ session });
@@ -273,9 +296,10 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
       });
     return result;
   } catch (error) {
-    payment.status = "pending";
-    payment.verifiedBy = id;
-    await payment.save();
+    await Payments.updateOne(
+      { _id: payment._id, status: "processing" },
+      { $set: { status: "pending" } },
+    );
     throw error;
   }
 };

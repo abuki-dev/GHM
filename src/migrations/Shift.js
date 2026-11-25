@@ -38,11 +38,12 @@ const shiftSchema = new mongoose.Schema({
       "Invalid time format. Use H:MM or HH:MM (e.g., 4:00 or 14:30)",
     ],
   },
-  max_capacity: { type: Number, required: true, check: (value) => value >= 0 },
+  max_capacity: { type: Number, required: true, min: 0 },
+  version: { type: Number, default: 0 },
 });
 shiftSchema.pre("validate", async function () {
   await incrementId(this, "shiftId");
-  await incrementId(this, "groupId");
+  await incrementId(this, "group");
 });
 const Shift = mongoose.model("shifts", shiftSchema);
 module.exports = Shift;
