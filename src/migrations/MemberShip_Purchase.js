@@ -22,6 +22,11 @@ const membershipPurchaseSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+    freezeUntill: { type: Date, default: null },
+    freezeStartedAt: { type: Date, default: null },
+    freezeDaysUsed: { type: Number, default: 0 },
+    remindersSent: { type: [Number], default: [] },
+    expiredNotifiedAt: { type: Date, default: null },
     start_date: { type: Date, required: true, index: true },
     end_date: { type: Date, required: true, index: true },
     status: {
@@ -37,6 +42,13 @@ const membershipPurchaseSchema = new mongoose.Schema(
 membershipPurchaseSchema.pre("validate", async function () {
   await incrementId(this, "purchaseId");
 });
+membershipPurchaseSchema.index(
+  { member_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: { $in: ["active", "frozen"] } },
+  },
+);
 const MembershipPurchase = mongoose.model(
   "membershippurchases",
   membershipPurchaseSchema,

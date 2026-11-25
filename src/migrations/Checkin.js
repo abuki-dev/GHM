@@ -8,7 +8,7 @@ const checkinSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    chekinTime: { type: Date, default: Date.now },
+    chekinTime: { type: Date, default: Date.now, required: true, index: true },
   },
   { timestamps: true },
 );
