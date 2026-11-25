@@ -3,6 +3,8 @@ const {
   refund,
   renewPurchaseRequest,
   getRenewalPayments,
+  manualCheckin,
+  getTodaysAttendance,
 } = require("../services/staff.service");
 
 module.exports.approvePayment = async (req, res, next) => {
@@ -50,6 +52,24 @@ module.exports.renewalRequests = async (req, res, next) => {
   try {
     const renewalRequests = await getRenewalPayments(req.query.page);
     res.json({ renewalRequests });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports.ManualCheckin = async (req, res, next) => {
+  try {
+    const response = await manualCheckin(req.body, req.user);
+    res.json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports.todaysAttendance = async (req, res, next) => {
+  try {
+    const response = await getTodaysAttendance(req.body, req.user);
+    res.json(response);
   } catch (error) {
     next(error);
   }

@@ -8,6 +8,8 @@ const {
   markPaymentRefunded,
   approveRenewal,
   renewalRequests,
+  ManualCheckin,
+  todaysAttendance,
 } = require("../controllers/staff.controller");
 const {
   handleValidationErrors,
@@ -56,5 +58,7 @@ staffRouter.patch(
   handleValidationErrors,
   approveRenewal,
 );
+staffRouter.post("/checkin", ManualCheckin);
+staffRouter.get("/attendance/today", todaysAttendance);
 
 module.exports = staffRouter;
