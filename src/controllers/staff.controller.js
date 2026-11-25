@@ -7,8 +7,8 @@ const {
 
 module.exports.approvePayment = async (req, res, next) => {
   try {
-    const payment = await approve(req.body, req.user);
-    res.json({ message: `payment verified Sucssfuly`, ...payment });
+    const result = await approve(req.body, req.user);
+    res.status(201).json(result);
   } catch (error) {
     next(error);
   }
@@ -16,8 +16,8 @@ module.exports.approvePayment = async (req, res, next) => {
 
 module.exports.declinePayment = async (req, res, next) => {
   try {
-    const payment = await decline(req.body, req.user);
-    res.json({ message: `payment Declined sucussfully`, payment });
+    const result = await decline(req.body, req.user);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

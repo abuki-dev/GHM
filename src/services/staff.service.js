@@ -51,6 +51,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
       await payment.save();
       return {
         message: `Amount ${payment.amount} does not match the plan price ${plan.price}. This payment requires a refund.`,
+        success: false,
       };
     }
     const session = await startSession();
@@ -88,6 +89,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
 
             return {
               message: "Shift is full. This payment requires a refund.",
+              success: false,
             };
           }
         }
@@ -96,7 +98,10 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
           payment.status = "verified";
           payment.verifiedBy = staffId;
           await payment.save({ session });
-          return { message: "the purchase has been extended scuccessfully" };
+          return {
+            message: "the purchase has been extended scuccessfully",
+            success: true,
+          };
         }
         if (allowed === "notallowed") {
           payment.status = "refund_pending";
@@ -106,6 +111,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
 
           return {
             message: "Purchase not allowed. This payment requires a refund.",
+            success: false,
           };
         }
 
@@ -134,7 +140,11 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
         payment.verifiedBy = staffId;
         payment.reason = "Payment verified successfully";
         await payment.save({ session });
-        return { payment, membershipPurchase };
+        return {
+          message:
+            "Payment verified successfully and membership purchase created.",
+          success: true,
+        };
       })
       .finally(async () => {
         await session.endSession();
@@ -159,7 +169,7 @@ module.exports.refund = async ({ transactionId }) => {
     throw new BadRequestError("Refund-pending payment not found");
   }
 
-  return payment;
+  return { message: "payment refunded successfully completed", success: true };
 };
 // paymentid user id nad planid
 
@@ -179,7 +189,7 @@ module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
   payment.reason = "Invalid payment details or amount mismatch";
   await payment.save();
 
-  return payment;
+  return { message: "Payment declined successfully", success: true };
 };
 module.exports.sendPayments = async (page = 1) => {
   const currentPage = Math.max(1, parseInt(page, 10) || 1);
