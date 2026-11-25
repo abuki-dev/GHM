@@ -83,8 +83,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
           if (occupiedSpots >= shift.max_capacity) {
             payment.status = "refund_pending";
             payment.verifiedBy = staffId;
-            payment.refundReason = "Shift is full";
-            payment.refundRequestedAt = new Date();
+            payment.reason = "Shift is full. This payment requires a refund.";
             await payment.save({ session });
 
             return {
@@ -173,11 +172,12 @@ module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
     { $set: { status: "failed", verifiedBy: id, reason } },
     { new: true },
   );
-  payment.reason = "Invalid payment details or amount mismatch";
-  await payment.save();
+
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
+  payment.reason = "Invalid payment details or amount mismatch";
+  await payment.save();
 
   return payment;
 };
@@ -229,7 +229,7 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   }).sort({ end_date: -1 });
   if (!membershipPurchase) {
     payment.status = "refund_pending";
-    await payment.save({ session });
+    await payment.save();
     throw new BadRequestError("Active membership purchase not found");
   }
 
@@ -239,7 +239,7 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   ) {
     payment.category = "new";
     payment.status = "pending";
-    await payment.save({ session });
+    await payment.save();
     return {
       message:
         "Membership has expired. This payment will be treated as a new purchase.",
@@ -249,12 +249,12 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
   const plan = await MembershipPlans.findOne({ planId: payment.planId });
   if (!plan) {
     payment.status = "refund_pending";
-    await payment.save({ session });
+    await payment.save();
     throw new BadRequestError("Membership Plan Not Found");
   }
   if (payment.amount !== plan.price) {
     payment.status = "refund_pending";
-    await payment.save({ session });
+    await payment.save();
     return {
       message: `Amount ${payment.amount} does not match the plan price ${plan.price}. This payment requires a refund.`,
     };

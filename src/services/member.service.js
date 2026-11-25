@@ -425,7 +425,7 @@ module.exports.createRenewalRequest = async (
     transactionId,
     userId: id,
     method,
-    cateogry: "renew",
+    category: "renew",
   });
   return {
     message: `Successfully sent renewal for ${amount} for plan ${planId} pleas wait few business days for the payment to be processed.`,
