@@ -16,8 +16,11 @@ const shiftSchema = new mongoose.Schema({
   },
   days_of_week: {
     type: [String],
-    required: true,
     enum: ["MON-WED-FRI", "TU-TH-SA"],
+    validate: {
+      validator: (v) => v.length > 0,
+      message: "Choose at least one day pattern",
+    },
   },
   startTime: {
     type: String,
@@ -34,10 +37,28 @@ const shiftSchema = new mongoose.Schema({
     trim: true,
     match: [
       /^([01]?\d|2[0-3]):[0-5]\d$/,
-      "Invalid time format. Use H:MM or HH:MM (e.g., 4:00 or 14:30)",
+      "Invalid time format. Use H:MM or HH:MM",
     ],
+    validate: {
+      validator: function (v) {
+        const m = (t) => {
+          const [h, min] = t.split(":").map(Number);
+          return h * 60 + min;
+        };
+        return m(v) > m(this.startTime);
+      },
+      message: "End time must be after start time",
+    },
   },
-  max_capacity: { type: Number, required: true, min: 0 },
+  max_capacity: {
+    type: Number,
+    required: true,
+    min: [1, "max_capacity must be at least 1"],
+    validate: {
+      validator: Number.isInteger,
+      message: "max_capacity must be a whole number",
+    },
+  },
   version: { type: Number, default: 0 },
 });
 shiftSchema.pre("validate", async function () {
