@@ -34,6 +34,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
+  const session = await startSession();
   try {
     const staffId = id;
 
@@ -150,9 +151,6 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
             "Payment verified successfully and membership purchase created.",
           success: true,
         };
-      })
-      .finally(async () => {
-        await session.endSession();
       });
     return result;
   } catch (error) {
@@ -161,6 +159,8 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
       { $set: { status: "pending" } },
     );
     throw error;
+  } finally {
+    await session.endSession();
   }
 };
 module.exports.refund = async ({ transactionId }) => {
@@ -225,14 +225,20 @@ module.exports.sendPayments = async (page = 1) => {
   ]);
   return filteredPayments;
 };
-module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
-  if (!transactionId || !id) {
+module.exports.renewPurchaseRequest = async ({ transactionId, method }, { id }) => {
+  if (typeof transactionId !== "string" || !transactionId.trim() || !id) {
     throw new BadRequestError("transactionId and user id are required");
   }
+  if (!method || !Payments.schema.path("method").enumValues.includes(method)) {
+    throw new BadRequestError("Invalid payment method");
+  }
+
+  const trans = transactionId.trim();
   const payment = await Payments.findOneAndUpdate(
     {
-      transactionId,
+      transactionId: trans,
       category: "renew",
+      method,
       status: { $in: ["pending"] },
     },
     { $set: { status: "processing", verifiedBy: id } },
@@ -299,9 +305,6 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
           payment,
           membershipPurchase,
         };
-      })
-      .finally(async () => {
-        await session.endSession();
       });
     return result;
   } catch (error) {
@@ -310,6 +313,8 @@ module.exports.renewPurchaseRequest = async ({ transactionId }, { id }) => {
       { $set: { status: "pending" } },
     );
     throw error;
+  } finally {
+    await session.endSession();
   }
 };
 module.exports.getRenewalPayments = async (page = 1) => {

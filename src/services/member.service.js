@@ -526,7 +526,22 @@ module.exports.createRenewalRequest = async (
       "Missing required fields: planId, amount, or transactionId",
     );
   }
-  const paymentExists = await Payments.findOne({ transactionId });
+  const [plan, paymentExists, activePurchase] = await Promise.all([
+    MembershipPlans.findOne({ planId: cleanPlanId }),
+    Payments.findOne({ transactionId: trans, method }),
+    getActivePurchase(id),
+  ]);
+
+  if (!plan) throw new BadRequestError("Membership plan not found.");
+  if (amount !== plan.price) {
+    throw new BadRequestError("Payment amount does not match the plan price.");
+  }
+  if (!activePurchase) {
+    throw new BadRequestError("No existing purchase is available to renew.");
+  }
+  if (activePurchase.membership_plan_id !== plan.planId) {
+    throw new ConflictError("Renewal must use the member's current plan.");
+  }
   if (paymentExists) {
     throw new ConflictError(
       "Payment with this transactionId already exists and used",
@@ -534,9 +549,9 @@ module.exports.createRenewalRequest = async (
   }
 
   await Payments.create({
-    planId,
+    planId: cleanPlanId,
     amount,
-    transactionId,
+    transactionId: trans,
     userId: id,
     method,
     category: "renew",

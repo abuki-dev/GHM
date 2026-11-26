@@ -29,8 +29,25 @@ module.exports.getMySessions = async (user) => {
 module.exports.updateMySession = async (user, sessionId, updates) => {
   const trainer = await getTrainer(user);
   const allowed = {};
-  for (const field of ["client_note", "calories_burned", "status"]) {
-    if (updates[field] !== undefined) allowed[field] = updates[field];
+
+  if (updates.client_note !== undefined) {
+    allowed.client_note = String(updates.client_note).trim();
+  }
+
+  if (updates.calories_burned !== undefined) {
+    const calories = Number(updates.calories_burned);
+    if (!Number.isFinite(calories) || calories < 0) {
+      throw new BadRequestError("Calories burned must be a positive number or zero.");
+    }
+    allowed.calories_burned = calories;
+  }
+
+  if (updates.status !== undefined) {
+    if (!["scheduled", "in_progress", "completed", "cancelled"].includes(updates.status)) {
+      throw new BadRequestError("Invalid session status.");
+    }
+    allowed.status = updates.status;
+    if (updates.status === "completed") allowed.end_time = new Date();
   }
 
   const session = await Sessions.findOneAndUpdate(

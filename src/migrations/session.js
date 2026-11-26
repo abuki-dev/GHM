@@ -15,7 +15,6 @@ const sessionSchema = new mongoose.Schema(
     },
     start_time: {
       type: String,
-      default: `${new Date().getHours() + ":" + new Date().getMinutes()}`,
       required: true
     },
     end_time: { type: Date },
