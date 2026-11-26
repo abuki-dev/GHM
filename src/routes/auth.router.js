@@ -6,6 +6,7 @@ const {
   register,
   login,
   chekinUser,
+  logout,
 } = require("../controllers/auth.controller");
 const {
   ValidateRegister,
@@ -45,4 +46,5 @@ authRouter.post(
   requireRole("staff", "admin"),
   chekinUser,
 );
+authRouter.post("/logout", logout);
 module.exports = authRouter;

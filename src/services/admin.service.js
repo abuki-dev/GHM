@@ -212,3 +212,28 @@ module.exports.removePlan = async function ({ planId }) {
   await MembershipPlans.deleteOne({ planId });
   return { message: "Plan deleted successfully", success: true };
 };
+module.exports.allDatabaseUsers = async (page = 1) => {
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const limit = 10;
+  const skip = (currentPage - 1) * limit;
+  return await Users.aggregate([
+    { $sort: { createdAt: -1 } },
+    {
+      $skip: skip,
+    },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+        full_name: 1,
+        email: 1,
+        role: 1,
+        createdAt: 1,
+        isActive: 1,
+        gender: 1,
+        age: 1,
+        phone: 1,
+      },
+    },
+  ]);
+};

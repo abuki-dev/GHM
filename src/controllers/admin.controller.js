@@ -5,7 +5,7 @@ const {
   removeTraining,
   newMembershipPlan,
 } = require("../services");
-const { removePlan } = require("../services/admin.service");
+const { removePlan, allDatabaseUsers } = require("../services/admin.service");
 
 module.exports.createTraining = async (req, res, next) => {
   try {
@@ -54,5 +54,13 @@ module.exports.deleteShifts = async (req, res, next) => {
     res.status(200).json(result);
   } catch (err) {
     next(err);
+  }
+};
+module.exports.getAllUsers = async (req, res, next) => {
+  try {
+    const result = await allDatabaseUsers(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
   }
 };

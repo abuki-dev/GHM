@@ -144,3 +144,14 @@ module.exports.loginUser = async ({ email, password }) => {
     token,
   };
 };
+module.exports.logoutUser = async (res, { user }) => {
+  if (!user) {
+    return { message: "No session founded", seccuss: false };
+  }
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: false,
+  });
+  return { message: "Logout succuss ", seccuss: true };
+};
