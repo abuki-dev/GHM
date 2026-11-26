@@ -4,6 +4,7 @@ const {
   createStandard,
   generateUserSession,
 } = require("../services");
+const { logoutUser } = require("../services/auth.service");
 const { cookieOptions } = require("../utils/token");
 
 module.exports.register = async (req, res, next) => {
@@ -33,6 +34,15 @@ module.exports.login = async (req, res, next) => {
       user,
       token,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.logout = async (req, res, next) => {
+  try {
+    const result = await logoutUser(res, req);
+
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

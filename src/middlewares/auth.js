@@ -4,7 +4,6 @@ const { UnauthorizedError } = require("../utils/app.errors");
 
 // Use on any route that needs a logged-in user: router.get("/x", authenticate, handler)
 const authenticate = passport.authenticate("jwt", { session: false });
-
 // Use after authenticate: router.delete("/x", authenticate, requireRole("admin"), handler)
 const requireRole =
   (...roles) =>
