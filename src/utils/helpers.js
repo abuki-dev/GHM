@@ -22,14 +22,18 @@ module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
   // purchases that already ended but are still marked active
   const now = new Date();
   await MembershipPurchase.updateMany(
-    { member_id: userId, status: "active", end_date: { $lte: now } },
+    {
+      member_id: userId,
+      status: { $in: ["active", "frozen"] },
+      end_date: { $lte: now },
+    },
     { $set: { status: "expired" } },
     { session },
   );
 
   const active = await MembershipPurchase.findOne({
     member_id: userId,
-    status: "active",
+    status: { $in: ["active", "frozen"] },
   }).session(session);
   if (!active) {
     return "allowed";

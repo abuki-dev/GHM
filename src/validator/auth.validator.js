@@ -59,7 +59,7 @@ const ValidateRole = [
     .trim()
     .notEmpty()
     .withMessage("Role is required")
-    .isIn(["staff", "trainer", "member"])
+    .isIn(["staff", "trainer"])
     .withMessage("Invalid role"),
 ];
 const validatemembrData = [

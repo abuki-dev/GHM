@@ -34,7 +34,7 @@ module.exports.newshift = async function ({
   room,
   max_capacity,
 }) {
-  if (!startTime || !endTime || !room) {
+  if (!startTime || !endTime || !room || !days_of_week) {
     throw new BadRequestError("Required fileds are empty try gan");
   }
 
@@ -158,8 +158,8 @@ module.exports.newMembershipPlan = async ({
   // now let us cheke the tier vvip =25 peopeles vvip 5 peoples / shift
   // if the tier is normal just passit
   if (
-    (tier === "vip" && shiftfound.max_capacity >= 15) ||
-    (tier === "vvip" && shiftfound.max_capacity >= 5)
+    (tier === "vip" && shiftfound.max_capacity > 15) ||
+    (tier === "vvip" && shiftfound.max_capacity > 5)
   ) {
     throw new BadRequestError(
       `Error the shift and plan mismatched plan is ${tier} and shift capacity is ${shiftfound.max_capacity}`,

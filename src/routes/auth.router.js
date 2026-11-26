@@ -14,20 +14,34 @@ const {
   validatemembrData,
 } = require("../validator/auth.validator");
 
-const { requireRole, authenticate } = require("../middlewares/auth");
+const {
+  requireRole,
+  authenticate,
+  registrationLimter,
+  loginLimiter,
+  chekinLimiter,
+} = require("../middlewares/auth");
 
 authRouter.post(
   "/register",
+  registrationLimter,
   ValidateRegister,
   validatemembrData,
   handleValidationErrors,
   register,
 );
 
-authRouter.post("/login", validateLogin, handleValidationErrors, login);
+authRouter.post(
+  "/login",
+  loginLimiter,
+  validateLogin,
+  handleValidationErrors,
+  login,
+);
 authRouter.post(
   "/chekin",
   authenticate,
+  chekinLimiter,
   requireRole("staff", "admin"),
   chekinUser,
 );

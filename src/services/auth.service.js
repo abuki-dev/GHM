@@ -129,6 +129,9 @@ module.exports.loginUser = async ({ email, password }) => {
     throw new UnauthorizedError("Invalid email or password"); // 401 Unauthorized
   }
 
+  if (!user.isActive) {
+    throw new UnauthorizedError("Error Accotn is not active try aganin ");
+  }
   // 4. Create signed JWT with identity and role
   const token = signToken(user);
 

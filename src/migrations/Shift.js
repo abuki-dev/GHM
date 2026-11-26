@@ -17,7 +17,6 @@ const shiftSchema = new mongoose.Schema({
   days_of_week: {
     type: [String],
     required: true,
-    index: true,
     enum: ["MON-WED-FRI", "TU-TH-SA"],
   },
   startTime: {

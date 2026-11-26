@@ -10,7 +10,7 @@ const {
 module.exports.approvePayment = async (req, res, next) => {
   try {
     const result = await approve(req.body, req.user);
-    res.status(201).json(result);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

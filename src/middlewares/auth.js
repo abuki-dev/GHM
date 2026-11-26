@@ -1,3 +1,4 @@
+const { default: rateLimit } = require("express-rate-limit");
 const passport = require("../config/passport");
 const { UnauthorizedError } = require("../utils/app.errors");
 
@@ -13,5 +14,28 @@ const requireRole =
       "You do not have permission to perform this action",
     );
   };
-
-module.exports = { authenticate, requireRole };
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const registrationLimter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const chekinLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+module.exports = {
+  authenticate,
+  requireRole,
+  loginLimiter,
+  chekinLimiter,
+  registrationLimter,
+};

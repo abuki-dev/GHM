@@ -17,6 +17,7 @@ const {
   handleValidationErrors,
   ValidateRole,
   valdatextraData,
+  validatemembrData,
 } = require("../validator/auth.validator");
 const { trainingValidator } = require("../validator/training.validator");
 
@@ -31,7 +32,7 @@ adminRoutes.post(
 adminRoutes.post(
   "/createmember",
   ValidateRegister,
-  ValidateRole,
+  validatemembrData,
   handleValidationErrors,
   register,
 );
