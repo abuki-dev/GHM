@@ -5,6 +5,7 @@ const {
   Shifts,
   Users,
   MembershipPurchase,
+  Checkins,
 } = require("../migrations");
 const { BadRequestError } = require("../utils/app.errors");
 const { isPurchaseaAllowed } = require("../utils/helpers");
@@ -326,4 +327,58 @@ module.exports.getRenewalPayments = async (page = 1) => {
   ]);
 
   return filteredPayments;
+};
+module.exports.manualCheckin = async ({ member_id, phone }) => {
+  if (!member_id && !phone) {
+    throw new BadRequestError("Provider a member ID or phone number");
+  }
+  const user = await Users.findOne({
+    role: "member",
+    ...(member_id ? { userId: member_id } : { phone }),
+  }).select("userId full_name phone");
+
+  if (!user) throw new BadRequestError("Memeber not found.");
+
+  const checkin = await Checkins.create({
+    userId: user.userId,
+    checkinTime: new Date(),
+  });
+  return { member: user, checkin };
+};
+
+module.exports.getTodaysAttendance = async () => {
+  const shifted = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const start = new Date(
+    Date.UTC(
+      shifted.getUTCFullYear(),
+      shifted.getUTCMonth(),
+      shifted.getUTCDate(),
+    ) -
+      3 * 60 * 60 * 1000,
+  );
+  const end = new Date(start.getTime() + 86_400_000);
+
+  return Checkins.aggregate([
+    {
+      $match: { checkinTime: { $gte: start, $lt: end } },
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "userId",
+        as: "user",
+      },
+    },
+    { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        userId: 1,
+        checkinTime: 1,
+        full_name: "$user.full_name",
+        phone: "$user.phone",
+      },
+    },
+    { $sort: { checkinTime: -1 } },
+  ]);
 };

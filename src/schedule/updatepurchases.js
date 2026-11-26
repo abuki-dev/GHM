@@ -1,26 +1,14 @@
-// select all active purchases
-// compute remaining days
-// expire if the due date passed
-//
-// coellct every active purchase
-// foreach purchase
-// 1 purchase
-// comute rmainign day
-// get the user email
-// if 5>=remainign day>=0  send the remainig date to the user email
-// if negative mak it expored and send the users hispurchase is expired
-
 const { schedule } = require("node-cron");
 const { MembershipPurchase, Users } = require("../migrations");
 const { sendEmail } = require("../utils/sendemail");
-// let ususe node-coron to run this function every day at 12:00 am
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 // let ususe node-coron to run this function every day at 12:00 am
 const updatePurchases = schedule(
   "0 0 * * *",
   async () => {
     const now = new Date();
-    console.log("Running updatePurchases job at", now.toISOString());
     const purchases = await MembershipPurchase.find({ status: "active" });
     for (const purchase of purchases) {
       try {
@@ -60,13 +48,14 @@ const updatePurchases = schedule(
     timezone: "Africa/Addis_Ababa",
   },
 );
+
 module.exports = {
   startJob: async () => {
     console.log("The jobs are running");
-    updatePurchases.start();
+    updatePurchasesJob.start();
   },
   stopJob: async () => {
-    console.log("The jobs are stooping and tremoinating");
-    updatePurchases.stop();
+    console.log("The jobs are stopping");
+    updatePurchasesJob.stop();
   },
 };

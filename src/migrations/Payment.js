@@ -24,6 +24,7 @@ const paymentSchema = new mongoose.Schema(
         "processing",
         "verified",
         "failed",
+        "cancelled",
         "refund_pending",
         "refunded",
       ],
