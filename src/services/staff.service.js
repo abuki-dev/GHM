@@ -241,24 +241,25 @@ module.exports.renewPurchaseRequest = async (
   if (!method || !Payments.schema.path("method").enumValues.includes(method)) {
     throw new BadRequestError("Invalid payment method");
   }
-
-  const trans = transactionId.trim();
-  const payment = await Payments.findOneAndUpdate(
-    {
-      transactionId: trans,
-      category: "renew",
-      method,
-      status: { $in: ["pending"] },
-    },
-    { $set: { status: "processing", verifiedBy: id } },
-    { new: true },
-  );
-  if (!payment) {
-    throw new BadRequestError("Payment Not Found try again");
-  }
-  // extend the membership purchase
   const session = await startSession();
+  let payment;
   try {
+    const trans = transactionId.trim();
+    payment = await Payments.findOneAndUpdate(
+      {
+        transactionId: trans,
+        category: "renew",
+        method,
+        status: { $in: ["pending"] },
+      },
+      { $set: { status: "processing", verifiedBy: id } },
+      { new: true },
+    );
+    if (!payment) {
+      throw new BadRequestError("Payment Not Found try again");
+    }
+    // extend the membership purchase
+
     const result = await session.withTransaction(async () => {
       const membershipPurchase = await MembershipPurchase.findOne({
         member_id: payment.userId,

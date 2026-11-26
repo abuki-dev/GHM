@@ -7,6 +7,7 @@ const {
   Sessions,
   Users,
   Checkins,
+  Feedbacks,
 } = require("../migrations");
 const { BadRequestError, ConflictError } = require("../utils/app.errors");
 const { toMinutes } = require("../utils/helpers");
@@ -327,7 +328,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   } catch {
     throw new BadRequestError("QR invalid or expired.");
   }
-  const { u: userId, p: purchaseId ,typ} = decoded;
+  const { u: userId, p: purchaseId, typ } = decoded;
   if (typ !== "gympass") {
     throw new BadRequestError("QR invalid or expired");
   }
@@ -660,8 +661,7 @@ module.exports.resumeMyMembership = async ({ id }) => {
 
   const elapsedMs = Math.max(
     0,
-    Math.min(now.getTime(), freezeUntil.getTime()) -
-      freezeStartedAt.getTime(),
+    Math.min(now.getTime(), freezeUntil.getTime()) - freezeStartedAt.getTime(),
   );
   const remainingFreezeLimit = 30 - (purchase.freezeDaysUsed || 0);
   const extendedMs = Math.min(elapsedMs, remainingFreezeLimit * 86_400_000);
