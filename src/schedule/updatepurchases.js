@@ -10,8 +10,10 @@ async function updatePurchases() {
   // Resume freezes that have reached their scheduled end.
   const expiredFreezes = await MembershipPurchase.find({
     status: "frozen",
-    freezeUntil: { $type: "date", $lte: now },
-    freezeStartedAt: { $type: "date" },
+    $or: [
+      { freezeUntil: { $type: "date", $lte: now } },
+      { freezeUntill: { $type: "date", $lte: now } },
+    ],
   });
 
   for (const purchase of expiredFreezes) {
@@ -20,12 +22,16 @@ async function updatePurchases() {
         0,
         30 - (purchase.freezeDaysUsed || 0),
       );
-      const scheduledFreezeMs = Math.max(
+      const freezeUntil = purchase.freezeUntil || purchase.freezeUntill;
+      const freezeStartedAt =
+        purchase.freezeStartedAt || new Date(freezeUntil.getTime() - 30 * DAY_MS);
+      const elapsedFreezeMs = Math.max(
         0,
-        purchase.freezeUntil.getTime() - purchase.freezeStartedAt.getTime(),
+        Math.min(now.getTime(), freezeUntil.getTime()) -
+          freezeStartedAt.getTime(),
       );
       const extensionMs = Math.min(
-        scheduledFreezeMs,
+        elapsedFreezeMs,
         remainingFreezeDays * DAY_MS,
       );
 
@@ -33,13 +39,16 @@ async function updatePurchases() {
         {
           _id: purchase._id,
           status: "frozen",
-          freezeUntil: purchase.freezeUntil,
-          freezeStartedAt: purchase.freezeStartedAt,
+          $or: [
+            { freezeUntil: freezeUntil },
+            { freezeUntill: freezeUntil },
+          ],
         },
         {
           $set: {
             status: "active",
             freezeUntil: null,
+            freezeUntill: null,
             freezeStartedAt: null,
             end_date: new Date(purchase.end_date.getTime() + extensionMs),
           },
@@ -63,8 +72,8 @@ async function updatePurchases() {
   // Send expiry notices. The schema marker ensures a successful notice isn't resent.
   const expiredPurchases = await MembershipPurchase.find({
     status: "expired",
-    end_date: { $lte: now },
-    expiredNotifiedAt: null,
+    end_date: { $gte: new Date(now.getTime() - 2 * DAY_MS), $lte: now },
+    $or: [{ expiredNotifiedAt: null }, { expiredNotifiedAt: { $exists: false } }],
   });
 
   for (const purchase of expiredPurchases) {

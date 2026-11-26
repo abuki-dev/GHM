@@ -11,7 +11,7 @@ const {
 const { BadRequestError, ConflictError } = require("../utils/app.errors");
 const { toMinutes } = require("../utils/helpers");
 const env = require("../config/env");
-const { expireStalePurchase, getActivePurchase } = require("./puchase.rules");
+const { expireStalePurchase, getActivePurchase } = require("./purchase.rules");
 
 module.exports.getMembershipPlans = async (page = 1, member_id = null) => {
   const currentPurchase = member_id ? await getActivePurchase(member_id) : null;
@@ -217,15 +217,16 @@ module.exports.savePaymentInfos = async (
   { planId, amount, transactionId, method },
   { id },
 ) => {
-  //check the avalable spots by using thepna id iside teh ouchases
+  const trans = typeof transactionId === "string" ? transactionId.trim() : "";
+
+  // check the available spots by using the plan ID inside the purchases
   if (
     typeof planId !== "string" ||
     !planId.trim() ||
-    !transactionId ||
+    !trans ||
     !Number.isFinite(amount) ||
     amount <= 0 ||
-    trans() === "" ||
-    !["CBE", "BOA", "Abissinia", "telebirr", "manual"].includes(method)
+    !Payments.schema.path("method").enumValues.includes(method)
   ) {
     throw new BadRequestError(
       "Missing required fields: planId, amount, or transactionId",
@@ -259,8 +260,7 @@ module.exports.savePaymentInfos = async (
     );
   }
 
-  const duplicate = await Payments.findOne({ transactionId, method });
-  const trans = transactionId.trim();
+  const duplicate = await Payments.findOne({ transactionId: trans, method });
   if (duplicate) {
     throw new ConflictError("This transaction has already been submitted.");
   }
@@ -268,7 +268,7 @@ module.exports.savePaymentInfos = async (
   await Payments.create({
     planId: plan.planId,
     amount,
-    transactionId: trans(),
+    transactionId: trans,
     userId: id,
     method,
     category: activePurchase ? "renew" : "new",
@@ -368,9 +368,37 @@ module.exports.generateUserSession = async ({ qrToken }) => {
   if (!plan) {
     throw new BadRequestError("Error the Plan Is not fouded try agan ");
   }
-  // is the user plan is normal no creatign session just  allowe him to go inside
+  const user = await Users.findOne({ userId })
+    .select("userId full_name phone")
+    .lean();
+
+  const recentCheckin = await Checkins.findOne({
+    userId,
+    $or: [
+      { checkinTime: { $gte: new Date(now.getTime() - 5 * 60_000) } },
+      { chekinTime: { $gte: new Date(now.getTime() - 5 * 60_000) } },
+    ],
+  }).sort({ createdAt: -1 });
+
+  if (recentCheckin) {
+    throw new BadRequestError("You have already been checked in recently.");
+  }
+
+  // Normal members do not need a coached session, but they still need attendance.
   if (plan.tier === "normal") {
-    return { message: "Normal member's paln ,You can go inside" };
+    const checkin = await Checkins.create({
+      userId,
+      checkinTime: now,
+      chekinTime: now,
+    });
+
+    return {
+      message: "Normal member pass accepted. You can go inside.",
+      member: user,
+      plan,
+      expiry: existingPurchase.end_date,
+      checkin,
+    };
   }
   //  chck if teh user is allowed to get in this shift at currunt time
   // else let us chek the shift start and end time
@@ -406,15 +434,16 @@ module.exports.generateUserSession = async ({ qrToken }) => {
       `your shift does not run today. Scheduled days: ${shift.days_of_week.join(", ")}`,
     );
   }
-  const sessiinexits = await Sessions.findOne({
+  const sessionExists = await Sessions.findOne({
     member_id: userId,
-    createdAt: new Date().toISOString(),
-  });
+    status: "in_progress",
+    createdAt: { $gte: new Date(now.getTime() - 5 * 60_000) },
+  }).sort({ createdAt: -1 });
 
-  if (sessiinexits) {
+  if (sessionExists) {
     return {
       message: "Session already live go and finish irt",
-      session: sessiinexits,
+      session: sessionExists,
     };
   }
   const currentMinutes =
@@ -433,9 +462,7 @@ module.exports.generateUserSession = async ({ qrToken }) => {
       `You are too late to enter the gym, your shift ended at ${shift.endTime}`,
     );
   }
-  const formattedTime = `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes(),
-  ).padStart(2, "0")}`;
+  const formattedTime = `${String(localParts.hour).padStart(2, "0")}:${String(localParts.minute).padStart(2, "0")}`;
   // now we can create the session for the user and let him go inside
   const trainerId = shift.trainerId;
   const createdSession = await Sessions.create({
@@ -443,10 +470,22 @@ module.exports.generateUserSession = async ({ qrToken }) => {
     member_id: userId,
     start_time: formattedTime,
     status: "in_progress",
-    createdAt: new Date().toISOString(),
-    siftId: shift.shiftId,
+    shiftId: shift.shiftId,
   });
-  return { message: "Session created successfully", session: createdSession };
+  const checkin = await Checkins.create({
+    userId,
+    checkinTime: now,
+    chekinTime: now,
+  });
+
+  return {
+    message: "Session created successfully",
+    member: user,
+    plan,
+    expiry: existingPurchase.end_date,
+    checkin,
+    session: createdSession,
+  };
 };
 module.exports.generateGympass = async ({ id }) => {
   const purchase = await getActivePurchase(id);
@@ -473,15 +512,15 @@ module.exports.createRenewalRequest = async (
   { planId, amount, transactionId, method },
   { id },
 ) => {
+  const trans = typeof transactionId === "string" ? transactionId.trim() : "";
+  const cleanPlanId = typeof planId === "string" ? planId.trim() : "";
+
   if (
-    (!planId ||
-      !amount ||
-      !transactionId ||
-      !Number.isFinite(amount) ||
-      amount <= 0 ||
-      transactionId.trim() === "" ||
-      !planId,
-    planId.trim() === "")
+    !cleanPlanId ||
+    !trans ||
+    !Number.isFinite(amount) ||
+    amount <= 0 ||
+    !Payments.schema.path("method").enumValues.includes(method)
   ) {
     throw new BadRequestError(
       "Missing required fields: planId, amount, or transactionId",
@@ -580,7 +619,9 @@ module.exports.freezeMyMembership = async ({ id }, days) => {
   }
 
   const now = new Date();
-  purchase.freezeUntill = new Date(now.getTime() + days * 86_400_000);
+  purchase.freezeStartedAt = now;
+  purchase.freezeUntil = new Date(now.getTime() + days * 86_400_000);
+  purchase.freezeUntill = purchase.freezeUntil;
   purchase.status = "frozen";
   await purchase.save();
   return purchase;
@@ -595,15 +636,27 @@ module.exports.resumeMyMembership = async ({ id }) => {
   if (!purchase) throw new BadRequestError("No frozen membership found.");
 
   const now = new Date();
-  const frozenFrom = new Date(
-    purchase.freezeUntill.getTime() - 30 * 86_400_000,
-  );
-  const elapsed = Math.max(0, Math.min(now - frozenFrom, 30 * 86_400_000));
-  const elapsedDays = elapsed / 86_400_000;
+  const freezeStartedAt = purchase.freezeStartedAt;
+  const freezeUntil = purchase.freezeUntil || purchase.freezeUntill;
 
-  purchase.end_date = new Date(purchase.end_date.getTime() + elapsed);
-  purchase.freezeDaysUsed = (purchase.freezeDaysUsed || 0) + elapsedDays;
+  if (!freezeStartedAt || !freezeUntil) {
+    throw new BadRequestError("Freeze dates are missing. Contact staff.");
+  }
+
+  const elapsedMs = Math.max(
+    0,
+    Math.min(now.getTime(), freezeUntil.getTime()) -
+      freezeStartedAt.getTime(),
+  );
+  const remainingFreezeLimit = 30 - (purchase.freezeDaysUsed || 0);
+  const extendedMs = Math.min(elapsedMs, remainingFreezeLimit * 86_400_000);
+
+  purchase.end_date = new Date(purchase.end_date.getTime() + extendedMs);
+  purchase.freezeDaysUsed =
+    (purchase.freezeDaysUsed || 0) + extendedMs / 86_400_000;
+  purchase.freezeUntil = null;
   purchase.freezeUntill = null;
+  purchase.freezeStartedAt = null;
   purchase.status = "active";
   await purchase.save();
   return purchase;

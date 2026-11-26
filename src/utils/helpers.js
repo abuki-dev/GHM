@@ -13,8 +13,12 @@ module.exports.formatHours = (date) => {
   const [h, m] = String(date).split(":").map(Number);
   return `${String(h).padStart(2, "0")}:${String(m || 0).padStart(2, "0")}`;
 };
-module.exports.createChekin = async (userId, chekinTime) => {
-  return await Checkins.create({ userId, chekinTime });
+module.exports.createCheckin = async (userId, checkinTime = new Date()) => {
+  return Checkins.create({ userId, checkinTime, chekinTime: checkinTime });
+};
+
+module.exports.createChekin = async (userId, chekinTime = new Date()) => {
+  return Checkins.create({ userId, checkinTime: chekinTime, chekinTime });
 };
 
 module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {

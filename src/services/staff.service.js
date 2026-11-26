@@ -11,13 +11,19 @@ const { BadRequestError } = require("../utils/app.errors");
 const { isPurchaseaAllowed } = require("../utils/helpers");
 
 module.exports.approve = async ({ transactionId, method }, { id }) => {
-  if (!transactionId || !id) {
-    throw new BadRequestError("transactionId and user id are required");
+  if (typeof transactionId !== "string" || !transactionId.trim()) {
+    throw new BadRequestError("A valid transaction Id is required");
   }
+
+  if (!method || !Payments.schema.path("method").enumValues.includes(method)) {
+    throw new BadRequestError("Invalid Payment method");
+  }
+
+  const trans = transactionId.trim();
   const payment = await Payments.findOneAndUpdate(
     {
-      transactionId,
-      category: "new",
+      transactionId: trans,
+      category: { $in: ["new", "renew"] },
       method,
       status: { $in: ["pending"] },
     },
@@ -55,8 +61,6 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
         success: false,
       };
     }
-    const session = await startSession();
-
     const result = await session
       .withTransaction(async () => {
         if (plan.tier !== "normal") {
@@ -78,7 +82,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
           const planIds = plansOnShift.map((item) => item.planId);
           const occupiedSpots = await MembershipPurchase.countDocuments({
             membership_plan_id: { $in: planIds },
-            status: "active",
+            status: { $in: ["active", "frozen"] },
             end_date: { $gt: new Date() },
           }).session(session);
 
@@ -175,11 +179,16 @@ module.exports.refund = async ({ transactionId }) => {
 // paymentid user id nad planid
 
 module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
-  if (!transactionId || !id) {
+  if (typeof transactionId !== "string" || !transactionId.trim() || !id) {
     throw new BadRequestError("transactionId and user id are required");
   }
+  if (!method || !Payments.schema.path("method").enumValues.includes(method)) {
+    throw new BadRequestError("Invalid Payment method");
+  }
+
+  const trans = transactionId.trim();
   const payment = await Payments.findOneAndUpdate(
-    { transactionId, method, status: { $in: ["pending"] } },
+    { transactionId: trans, method, status: { $in: ["pending"] } },
     { $set: { status: "failed", verifiedBy: id, reason } },
     { new: true },
   );
@@ -198,7 +207,7 @@ module.exports.sendPayments = async (page = 1) => {
   const skip = (currentPage - 1) * limit;
   const filteredPayments = await Payments.aggregate([
     { $sort: { date: -1 } },
-    { $match: { status: { $in: ["pending"] }, category: "new" } },
+    { $match: { status: { $in: ["pending"] }, category: { $in: ["new", "renew"] } } },
     { $skip: skip },
     { $limit: limit },
 
@@ -330,20 +339,74 @@ module.exports.getRenewalPayments = async (page = 1) => {
 };
 module.exports.manualCheckin = async ({ member_id, phone }) => {
   if (!member_id && !phone) {
-    throw new BadRequestError("Provider a member ID or phone number");
+    throw new BadRequestError("Provide a member ID or phone number");
   }
+
   const user = await Users.findOne({
     role: "member",
     ...(member_id ? { userId: member_id } : { phone }),
   }).select("userId full_name phone");
 
-  if (!user) throw new BadRequestError("Memeber not found.");
+  if (!user) throw new BadRequestError("Member not found.");
+
+  const now = new Date();
+  const purchase = await MembershipPurchase.findOne({
+    member_id: user.userId,
+    status: "active",
+    start_date: { $lte: now },
+    end_date: { $gt: now },
+  }).sort({ end_date: -1 });
+
+  if (!purchase) {
+    throw new BadRequestError("Member has no active membership.");
+  }
+
+  const recent = await Checkins.findOne({
+    userId: user.userId,
+    $or: [
+      { checkinTime: { $gte: new Date(now.getTime() - 5 * 60_000) } },
+      { chekinTime: { $gte: new Date(now.getTime() - 5 * 60_000) } },
+    ],
+  }).sort({ createdAt: -1 });
+
+  if (recent) {
+    throw new BadRequestError("Member was checked in recently.");
+  }
 
   const checkin = await Checkins.create({
     userId: user.userId,
-    checkinTime: new Date(),
+    checkinTime: now,
+    chekinTime: now,
   });
-  return { member: user, checkin };
+
+  const plan = await MembershipPlans.findOne({
+    planId: purchase.membership_plan_id,
+  }).select("title tier planId");
+
+  const dayStart = new Date(now);
+  dayStart.setHours(0, 0, 0, 0);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setDate(dayEnd.getDate() + 1);
+
+  const todayVisitCount = await Checkins.countDocuments({
+    userId: user.userId,
+    $or: [
+      { checkinTime: { $gte: dayStart, $lt: dayEnd } },
+      { chekinTime: { $gte: dayStart, $lt: dayEnd } },
+    ],
+  });
+
+  return {
+    member: {
+      userId: user.userId,
+      full_name: user.full_name,
+      phone: user.phone,
+    },
+    plan,
+    expiry: purchase.end_date,
+    todayVisitCount,
+    checkin,
+  };
 };
 
 module.exports.getTodaysAttendance = async () => {
@@ -360,7 +423,12 @@ module.exports.getTodaysAttendance = async () => {
 
   return Checkins.aggregate([
     {
-      $match: { checkinTime: { $gte: start, $lt: end } },
+      $match: {
+        $or: [
+          { checkinTime: { $gte: start, $lt: end } },
+          { chekinTime: { $gte: start, $lt: end } },
+        ],
+      },
     },
     {
       $lookup: {
@@ -374,7 +442,7 @@ module.exports.getTodaysAttendance = async () => {
     {
       $project: {
         userId: 1,
-        checkinTime: 1,
+        checkinTime: { $ifNull: ["$checkinTime", "$chekinTime"] },
         full_name: "$user.full_name",
         phone: "$user.phone",
       },
