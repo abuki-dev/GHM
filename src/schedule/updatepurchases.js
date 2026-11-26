@@ -20,6 +20,7 @@ const updatePurchases = schedule(
   "0 0 * * *",
   async () => {
     const now = new Date();
+    console.log("Running updatePurchases job at", now.toISOString());
     const purchases = await MembershipPurchase.find({ status: "active" });
     for (const purchase of purchases) {
       try {
@@ -54,7 +55,10 @@ const updatePurchases = schedule(
       }
     }
   },
-  { timezone: "Africa/Addis_Ababa" },
+  {
+    scheduled: true,
+    timezone: "Africa/Addis_Ababa",
+  },
 );
 module.exports = {
   startJob: async () => {
