@@ -156,23 +156,20 @@ module.exports.newMembershipPlan = async ({
     );
   }
   const trainigfound = await Training.findOne({ trainingId });
-  const shiftfound = await Shifts.findOne({ shiftId });
-  if (!trainigfound || (!shiftfound && tier !== "normal")) {
-    throw new BadRequestError(
-      "Training program not found or Shift not founded.",
-    );
-  }
-  // now let us cheke the tier vvip =25 peopeles vvip 5 peoples / shift
-  // if the tier is normal just passit
-  if (
-    (tier === "vip" && shiftfound.max_capacity > 15) ||
-    (tier === "vvip" && shiftfound.max_capacity > 5)
-  ) {
-    throw new BadRequestError(
-      `Error the shift and plan mismatched plan is ${tier} and shift capacity is ${shiftfound.max_capacity}`,
-    );
-  }
+  if (!trainigfound) throw new BadRequestError("Training program not found.");
 
+  if (tier !== "normal") {
+    const shiftfound = await Shifts.findOne({ shiftId });
+    if (!shiftfound) throw new BadRequestError("Shift not found.");
+    if (
+      (tier === "vip" && shiftfound.max_capacity > 15) ||
+      (tier === "vvip" && shiftfound.max_capacity > 5)
+    ) {
+      throw new BadRequestError(
+        `Error the shift and plan mismatched plan is ${tier} and shift capacity is ${shiftfound.max_capacity}`,
+      );
+    }
+  }
   const newPlan = new MembershipPlans({
     title,
     description,
