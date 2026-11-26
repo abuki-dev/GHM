@@ -76,7 +76,9 @@ module.exports.newshift = async function ({
 module.exports.removeshift = async function ({ shiftId }) {
   //first find all purchases in this shift that are actively attended by teh memebere
   // i fexist throw errrow there are active purchaaes exits
-
+  if (!shiftId) {
+    throw new BadRequestError("Shift ID is required. Try again.");
+  }
   const isActive = Boolean(
     await MembershipPurchase.exists({
       shiftId,
@@ -146,6 +148,11 @@ module.exports.newMembershipPlan = async ({
   if (!price || price <= 0 || isNaN(price)) {
     throw new BadRequestError(
       "Price must be a positive number greater than zero. Please provide a valid price.",
+    );
+  }
+  if (!title || !description || !duration_days || !tier) {
+    throw new BadRequestError(
+      "Missing required fields: title, description, duration_days, or tier. Please provide all necessary information.",
     );
   }
   const trainigfound = await Training.findOne({ trainingId });
