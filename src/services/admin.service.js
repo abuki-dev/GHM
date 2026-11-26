@@ -6,9 +6,11 @@ const {
   Trainer,
   MembershipPurchase,
   Payments,
+  Feedbacks,
+  Checkins,
 } = require("../migrations");
 const { BadRequestError, ConflictError } = require("../utils/app.errors");
-const { formatHours } = require("../utils/helpers");
+const { formatHours, getPagination } = require("../utils/helpers");
 
 module.exports.newtraining = async function ({
   title,
@@ -217,9 +219,8 @@ module.exports.removePlan = async function ({ planId }) {
   return { message: "Plan deleted successfully", success: true };
 };
 module.exports.allDatabaseUsers = async (page = 1) => {
-  const currentPage = Math.max(1, parseInt(page, 10) || 1);
-  const limit = 10;
-  const skip = (currentPage - 1) * limit;
+  const { limit, skip } = getPagination(page);
+
   return await Users.aggregate([
     { $sort: { createdAt: -1 } },
     {
@@ -241,70 +242,162 @@ module.exports.allDatabaseUsers = async (page = 1) => {
     },
   ]);
 };
-module.exports.allDatabasePurchases = async (page = 1) => {
-  const currentPage = Math.max(1, parseInt(page, 10) || 1);
-  const limit = 10;
-  const skip = (currentPage - 1) * limit;
-  return await MembershipPurchase.aggregate([
+// Helper to keep pagination logic clean and consistent across all functions
+
+// 1. Checkins
+module.exports.allDatabaseCheckins = async (page = 1) => {
+  const { limit, skip } = getPagination(page);
+  return await Checkins.aggregate([
     { $sort: { createdAt: -1 } },
-    {
-      $skip: skip,
-    },
+    { $skip: skip },
     { $limit: limit },
     {
       $project: {
         _id: 0,
+        userId: 1,
+        checkinTime: 1,
+        createdAt: 1,
       },
     },
   ]);
 };
-module.exports.allDatabasePlans = async (page = 1) => {
-  const currentPage = Math.max(1, parseInt(page, 10) || 1);
-  const limit = 10;
-  const skip = (currentPage - 1) * limit;
+
+// 2. Membership Purchases
+module.exports.allDatabaseMembershipPurchases = async (page = 1) => {
+  const { limit, skip } = getPagination(page);
   return await MembershipPurchase.aggregate([
     { $sort: { createdAt: -1 } },
-    {
-      $skip: skip,
-    },
+    { $skip: skip },
     { $limit: limit },
     {
       $project: {
         _id: 0,
+        purchaseId: 1,
+        member_id: 1,
+        membership_plan_id: 1,
+        payment_id: 1,
+        freezeUntil: 1,
+        freezeStartedAt: 1,
+        freezeDaysUsed: 1,
+        remindersSent: 1,
+        expiredNotifiedAt: 1,
+        start_date: 1,
+        end_date: 1,
+        status: 1,
+        shiftId: 1,
+        createdAt: 1,
       },
     },
   ]);
 };
+
+// 3. Membership Plans
+module.exports.allDatabaseMembershipPlans = async (page = 1) => {
+  const { limit, skip } = getPagination(page);
+  return await MembershipPlans.aggregate([
+    { $sort: { _id: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+        planId: 1,
+        title: 1,
+        description: 1,
+        duration_days: 1,
+        price: 1,
+        training_id: 1,
+        shiftId: 1,
+      },
+    },
+  ]);
+};
+
+// 4. Payments
+module.exports.allDatabasePayments = async (page = 1) => {
+  const { limit, skip } = getPagination(page);
+  return await Payments.aggregate([
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+        userId: 1,
+        planId: 1,
+        amount: 1,
+        transactionId: 1,
+        method: 1,
+        category: 1,
+        status: 1,
+        reason: 1,
+        verifiedBy: 1,
+        date: 1,
+        createdAt: 1,
+      },
+    },
+  ]);
+};
+
+// 5. Shifts
 module.exports.allDatabaseShifts = async (page = 1) => {
-  const currentPage = Math.max(1, parseInt(page, 10) || 1);
-  const limit = 10;
-  const skip = (currentPage - 1) * limit;
-  return await MembershipPurchase.aggregate([
-    { $sort: { createdAt: -1 } },
-    {
-      $skip: skip,
-    },
+  const { limit, skip } = getPagination(page);
+  return await Shifts.aggregate([
+    { $sort: { _id: -1 } },
+    { $skip: skip },
     { $limit: limit },
     {
       $project: {
         _id: 0,
+        shiftId: 1,
+        trainerId: 1,
+        group: 1,
+        room: 1,
+        period: 1,
+        days_of_week: 1,
+        startTime: 1,
+        endTime: 1,
+        max_capacity: 1,
+        version: 1,
       },
     },
   ]);
 };
+
+// 6. Trainings
 module.exports.allDatabaseTrainings = async (page = 1) => {
-  const currentPage = Math.max(1, parseInt(page, 10) || 1);
-  const limit = 10;
-  const skip = (currentPage - 1) * limit;
-  return await MembershipPurchase.aggregate([
+  const { limit, skip } = getPagination(page);
+  return await Training.aggregate([
     { $sort: { createdAt: -1 } },
-    {
-      $skip: skip,
-    },
+    { $skip: skip },
     { $limit: limit },
     {
       $project: {
         _id: 0,
+        trainingId: 1,
+        title: 1,
+        category: 1,
+        description: 1,
+        level: 1,
+        createdAt: 1,
+      },
+    },
+  ]);
+};
+
+// 7. Feedbacks
+module.exports.allDatabaseFeedbacks = async (page = 1) => {
+  const { limit, skip } = getPagination(page);
+  return await Feedbacks.aggregate([
+    { $sort: { _id: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+        userId: 1,
+        title: 1,
+        body: 1,
       },
     },
   ]);

@@ -71,3 +71,9 @@ module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
   // extend teh purchase by teh plans durasion day
   // if not return not allowed then you will mark this ass pennndng refeund later
 };
+module.exports.getPagination = (page = 1) => {
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const limit = 10;
+  const skip = (currentPage - 1) * limit;
+  return { limit, skip };
+};
