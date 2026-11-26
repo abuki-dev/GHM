@@ -580,7 +580,7 @@ module.exports.freezeMyMembership = async ({ id }, days) => {
   }
 
   const now = new Date();
-  purchase.freezeUntil = new Date(now.getTime() + days * 86_400_000);
+  purchase.freezeUntill = new Date(now.getTime() + days * 86_400_000);
   purchase.status = "frozen";
   await purchase.save();
   return purchase;
