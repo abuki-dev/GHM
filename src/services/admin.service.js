@@ -241,3 +241,71 @@ module.exports.allDatabaseUsers = async (page = 1) => {
     },
   ]);
 };
+module.exports.allDatabasePurchases = async (page = 1) => {
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const limit = 10;
+  const skip = (currentPage - 1) * limit;
+  return await MembershipPurchase.aggregate([
+    { $sort: { createdAt: -1 } },
+    {
+      $skip: skip,
+    },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+      },
+    },
+  ]);
+};
+module.exports.allDatabasePlans = async (page = 1) => {
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const limit = 10;
+  const skip = (currentPage - 1) * limit;
+  return await MembershipPurchase.aggregate([
+    { $sort: { createdAt: -1 } },
+    {
+      $skip: skip,
+    },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+      },
+    },
+  ]);
+};
+module.exports.allDatabaseShifts = async (page = 1) => {
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const limit = 10;
+  const skip = (currentPage - 1) * limit;
+  return await MembershipPurchase.aggregate([
+    { $sort: { createdAt: -1 } },
+    {
+      $skip: skip,
+    },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+      },
+    },
+  ]);
+};
+module.exports.allDatabaseTrainings = async (page = 1) => {
+  const currentPage = Math.max(1, parseInt(page, 10) || 1);
+  const limit = 10;
+  const skip = (currentPage - 1) * limit;
+  return await MembershipPurchase.aggregate([
+    { $sort: { createdAt: -1 } },
+    {
+      $skip: skip,
+    },
+    { $limit: limit },
+    {
+      $project: {
+        _id: 0,
+      },
+    },
+  ]);
+};

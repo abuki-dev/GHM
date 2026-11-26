@@ -7,6 +7,10 @@ const {
   deleteMembershipPlan,
   deleteShifts,
   getAllUsers,
+  getAllPlans,
+  getAllshitfs,
+  getAllpurchases,
+  getAllTrainings,
 } = require("../controllers/admin.controller");
 const {
   register,
@@ -55,6 +59,10 @@ adminRoutes.post(
 );
 adminRoutes.delete("/deleteshift", deleteShifts);
 adminRoutes.get("/allUsers", getAllUsers);
+adminRoutes.get("/allPlans", getAllPlans);
+adminRoutes.get("/allShifts", getAllshitfs);
+adminRoutes.get("/allPurchases", getAllpurchases);
+adminRoutes.get("/allTrainings", getAllTrainings);
 // get all users
 // get all members with email
 // get all tarinig

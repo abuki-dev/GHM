@@ -5,7 +5,14 @@ const {
   removeTraining,
   newMembershipPlan,
 } = require("../services");
-const { removePlan, allDatabaseUsers } = require("../services/admin.service");
+const {
+  removePlan,
+  allDatabaseUsers,
+  allDatabasePlans,
+  allDatabaseShifts,
+  allDatabasePurchases,
+  allDatabaseTrainings,
+} = require("../services/admin.service");
 
 module.exports.createTraining = async (req, res, next) => {
   try {
@@ -59,6 +66,38 @@ module.exports.deleteShifts = async (req, res, next) => {
 module.exports.getAllUsers = async (req, res, next) => {
   try {
     const result = await allDatabaseUsers(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getAllPlans = async (req, res, next) => {
+  try {
+    const result = await allDatabasePlans(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getAllshitfs = async (req, res, next) => {
+  try {
+    const result = await allDatabaseShifts(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getAllpurchases = async (req, res, next) => {
+  try {
+    const result = await allDatabasePurchases(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getAllTrainings = async (req, res, next) => {
+  try {
+    const result = await allDatabaseTrainings(req.query.page);
     res.status(200).json(result);
   } catch (error) {
     next(error);
