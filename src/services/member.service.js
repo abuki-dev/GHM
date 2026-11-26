@@ -12,7 +12,10 @@ const {
 const { BadRequestError, ConflictError } = require("../utils/app.errors");
 const { toMinutes } = require("../utils/helpers");
 const env = require("../config/env");
-const { expireStalePurchase, getActivePurchase } = require("./purchase.rules");
+const {
+  expireStalePurchase,
+  getActivePurchase,
+} = require("../services/puchase.rules");
 
 module.exports.getMembershipPlans = async (page = 1, member_id = null) => {
   const currentPurchase = member_id ? await getActivePurchase(member_id) : null;
