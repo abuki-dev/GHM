@@ -157,7 +157,7 @@ module.exports.newMembershipPlan = async ({
   }
   const trainigfound = await Training.findOne({ trainingId });
   const shiftfound = await Shifts.findOne({ shiftId });
-  if (!trainigfound || !shiftfound) {
+  if (!trainigfound || (!shiftfound && tier !== "normal")) {
     throw new BadRequestError(
       "Training program not found or Shift not founded.",
     );
