@@ -1,6 +1,6 @@
 const { default: rateLimit } = require("express-rate-limit");
 const passport = require("../config/passport");
-const { UnauthorizedError } = require("../utils/app.errors");
+const { BadRequestError } = require("../utils/app.errors");
 
 // Use on any route that needs a logged-in user: router.get("/x", authenticate, handler)
 const authenticate = passport.authenticate("jwt", { session: false });
@@ -9,7 +9,7 @@ const requireRole =
   (...roles) =>
   (req, res, next) => {
     if (req.user && roles.includes(req.user.role)) return next();
-    throw new UnauthorizedError(
+    throw new BadRequestError(
       "You do not have permission to perform this action",
     );
   };
@@ -27,7 +27,7 @@ const registrationLimter = rateLimit({
 });
 const chekinLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 5,
+  limit: 60,
   standardHeaders: true,
   legacyHeaders: false,
 });

@@ -6,7 +6,7 @@ const {
   ConflictError,
   BadRequestError,
 } = require("../utils/app.errors");
-const { signToken } = require("../utils/token");
+const { signToken, cookieOptions } = require("../utils/token");
 
 module.exports.insertUser = async ({
   full_name,
@@ -144,14 +144,7 @@ module.exports.loginUser = async ({ email, password }) => {
     token,
   };
 };
-module.exports.logoutUser = async (res, { user }) => {
-  if (!user) {
-    return { message: "No session founded", seccuss: false };
-  }
-  res.clearCookie("token", {
-    httpOnly: true,
-    sameSite: "strict",
-    secure: false,
-  });
+module.exports.logoutUser = async (res) => {
+  res.clearCookie("token", cookieOptions);
   return { message: "Logout succuss ", seccuss: true };
 };
