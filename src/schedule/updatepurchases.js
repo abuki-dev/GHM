@@ -52,10 +52,10 @@ const updatePurchases = schedule(
 module.exports = {
   startJob: async () => {
     console.log("The jobs are running");
-    updatePurchasesJob.start();
+    updatePurchases.start();
   },
   stopJob: async () => {
     console.log("The jobs are stopping");
-    updatePurchasesJob.stop();
+    updatePurchases.stop();
   },
 };
