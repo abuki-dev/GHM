@@ -37,7 +37,7 @@ module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
 
   const active = await MembershipPurchase.findOne({
     member_id: userId,
-    status: { $in: ["active"] },
+    status: { $in: ["active", "frozen"] },
   }).session(session);
   if (!active) {
     return "allowed";
