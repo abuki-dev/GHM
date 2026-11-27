@@ -84,7 +84,16 @@ module.exports.getMembershipPlans = async (page = 1, member_id = null) => {
         let: { targetShiftId: "$shiftId" },
         pipeline: [
           // 1. Find all plans that share this shiftId
-          { $match: { $expr: { $eq: ["$shiftId", "$$targetShiftId"] } } },
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$shiftId", "$$targetShiftId"] },
+                  { $eq: ["$isActive", true] },
+                ],
+              },
+            },
+          },
 
           // 2. Join active purchases belonging to ANY of those plans
           {

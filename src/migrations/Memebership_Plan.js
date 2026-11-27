@@ -36,6 +36,9 @@ membershpPlanSchema.pre("validate", async function () {
   await incrementId(this, "planId");
 });
 
-membershpPlanSchema.index({ title: 1, tier: -1 }, { unique: true });
+membershpPlanSchema.index(
+  { title: 1, tier: -1 },
+  { unique: true, partialFilterExpression: { isActive: true } },
+);
 const MembershipPlan = mongoose.model("membershipplans", membershpPlanSchema);
 module.exports = MembershipPlan;
