@@ -83,6 +83,7 @@ module.exports.removeshift = async function ({ shiftId }) {
   }
   const planUsesShift = await MembershipPlans.exists({
     shiftId,
+    isActive: true,
   });
   if (planUsesShift) {
     throw new ConflictError(
