@@ -92,7 +92,7 @@ module.exports.removeshift = async function ({ shiftId }) {
     throw new BadRequestError("the shift is not Founded in the Database");
   }
   //// 3. Clean up (or deactivate) any MembershipPlans tied to this deleted shift
-  await MembershipPlans.deleteMany({ shiftId });
+  await MembershipPlans.updateMany({ shiftId }, { $set: { isActive: false } });
   return { message: "Shift deleted successfully", success: true };
 };
 module.exports.removeTraining = async function ({ trainingId }) {
@@ -210,7 +210,7 @@ module.exports.removePlan = async function ({ planId }) {
       "Cannot delete: there are unprocessed payments for this plan.",
     );
   }
-  await MembershipPlans.deleteOne({ planId });
+  await MembershipPlans.updateOne({ planId }, { $set: { isActive: false } });
   return { message: "Plan deleted successfully", success: true };
 };
 module.exports.allDatabaseUsers = async (page = 1) => {
@@ -303,6 +303,7 @@ module.exports.allDatabaseMembershipPlans = async (page = 1) => {
         price: 1,
         training_id: 1,
         shiftId: 1,
+        isActive: 1,
       },
     },
   ]);

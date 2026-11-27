@@ -30,6 +30,7 @@ const membershpPlanSchema = new mongoose.Schema({
     ref: "shifts",
     index: true,
   },
+  isActive: { type: Boolean, default: true },
 });
 membershpPlanSchema.pre("validate", async function () {
   await incrementId(this, "planId");
