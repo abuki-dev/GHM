@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const { hash } = require("bcryptjs");
 const {
   Users,
   Staff,
@@ -24,10 +24,10 @@ const seedDatabase = async () => {
 
     console.log("Database empty. Seeding complete gym dataset...");
 
-    const adminPassword = await bcrypt.hash("Admin@1234", 10);
-    const member = await bcrypt.hash("member@1234", 10);
-    const staffPassword = await bcrypt.hash("staff@1234", 10);
-    const trainerPassword = await bcrypt.hash("trainer@1234", 10);
+    const adminPassword = await hash("Admin@1234", 10);
+    const member = await hash("member@1234", 10);
+    const staffPassword = await hash("staff@1234", 10);
+    const trainerPassword = await hash("trainer@1234", 10);
     const now = new Date();
     const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const ninetyDaysLater = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
@@ -173,6 +173,7 @@ const seedDatabase = async () => {
     // 5. MEMBERSHIP PLANS (Requires training_id & shiftId)
     const monthlyPlan = await MembershipPlans.create({
       title: "Monthly Standard Plan",
+      tier: "normal",
       description: "30-day full access to Main Hall morning sessions.",
       duration_days: 30,
       price: 1500,
@@ -182,6 +183,7 @@ const seedDatabase = async () => {
 
     const quarterlyVipPlan = await MembershipPlans.create({
       title: "Quarterly VIP Plan",
+      tier: "vip",
       description: "90-day VIP Room access with evening HIIT coaching.",
       duration_days: 90,
       price: 4000,
