@@ -178,26 +178,26 @@ module.exports.refund = async ({ transactionId }) => {
 };
 // paymentid user id nad planid
 
-module.exports.decline = async ({ transactionId, method }, { id }) => {
+module.exports.decline = async ({ transactionId, method, reason }, { id }) => {
   if (typeof transactionId !== "string" || !transactionId.trim() || !id) {
     throw new BadRequestError("transactionId and user id are required");
   }
   if (!method || !Payments.schema.path("method").enumValues.includes(method)) {
     throw new BadRequestError("Invalid Payment method");
   }
-
   const trans = transactionId.trim();
   const payment = await Payments.findOneAndUpdate(
-    { transactionId: trans, method, status: { $in: ["pending"] } },
-    { $set: { status: "failed", verifiedBy: id } },
+    { transactionId: trans, method, status: "pending" },
+    {
+      $set: {
+        status: "failed",
+        verifiedBy: id,
+        reason: reason?.trim() || "Declined by staff",
+      },
+    },
     { new: true },
   );
-
-  if (!payment) {
-    throw new BadRequestError("Payment Not Found try again");
-  }
-  await payment.save();
-
+  if (!payment) throw new BadRequestError("Payment Not Found try again");
   return { message: "Payment declined successfully", success: true };
 };
 module.exports.sendPayments = async (page = 1) => {
