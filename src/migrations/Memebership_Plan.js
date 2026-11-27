@@ -19,6 +19,7 @@ const membershpPlanSchema = new mongoose.Schema({
     required: true,
     min: [1, "price must be greater than 0"],
   },
+  tier: { type: String, enum: ["vip", "vvip", "normal"], required: true },
   training_id: {
     type: String,
     ref: "trainings",

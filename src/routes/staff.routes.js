@@ -6,7 +6,7 @@ const {
   approvePayment,
   declinePayment,
   markPaymentRefunded,
-  approveRenewal,
+  // approveRenewal,
   renewalRequests,
   ManualCheckin,
   todaysAttendance,
@@ -52,12 +52,12 @@ staffRouter.patch(
   markPaymentRefunded,
 );
 
-staffRouter.patch(
-  "/approve-renewal",
-  validateTransactionId,
-  handleValidationErrors,
-  approveRenewal,
-);
+// staffRouter.patch(
+//   "/approve-renewal",
+//   validateTransactionId,
+//   handleValidationErrors,
+//   approveRenewal,
+// );
 staffRouter.post("/checkin", ManualCheckin);
 staffRouter.get("/attendance/today", todaysAttendance);
 

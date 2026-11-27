@@ -28,7 +28,7 @@ module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
   await MembershipPurchase.updateMany(
     {
       member_id: userId,
-      status: { $in: ["active", "frozen"] },
+      status: { $in: ["active"] },
       end_date: { $lte: now },
     },
     { $set: { status: "expired" } },
@@ -37,7 +37,7 @@ module.exports.isPurchaseaAllowed = async (userId, Plan, session) => {
 
   const active = await MembershipPurchase.findOne({
     member_id: userId,
-    status: { $in: ["active", "frozen"] },
+    status: { $in: ["active"] },
   }).session(session);
   if (!active) {
     return "allowed";
