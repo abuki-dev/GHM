@@ -136,7 +136,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
         now.getTime() + plan.duration_days * 24 * 60 * 60 * 1000,
       );
 
-      const [membershipPurchase] = await MembershipPurchase.create(
+      await MembershipPurchase.create((
         [
           {
             member_id: payment.userId || payment.member_id,
