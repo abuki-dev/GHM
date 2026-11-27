@@ -79,7 +79,7 @@ module.exports.getAllPlans = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.getAllshitfs = async (req, res, next) => {
+module.exports.getAllShifts = async (req, res, next) => {
   try {
     const result = await allDatabaseShifts(req.query.page);
     res.status(200).json(result);
@@ -87,7 +87,7 @@ module.exports.getAllshitfs = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.getAllpurchases = async (req, res, next) => {
+module.exports.getAllPurchases = async (req, res, next) => {
   try {
     const result = await allDatabasePurchases(req.query.page);
     res.status(200).json(result);
