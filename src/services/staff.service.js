@@ -196,7 +196,6 @@ module.exports.decline = async ({ transactionId, method }, { id }) => {
   if (!payment) {
     throw new BadRequestError("Payment Not Found try again");
   }
-  payment.reason = "Invalid payment details or amount mismatch";
   await payment.save();
 
   return { message: "Payment declined successfully", success: true };
