@@ -81,15 +81,10 @@ module.exports.removeshift = async function ({ shiftId }) {
   if (!shiftId) {
     throw new BadRequestError("Shift ID is required. Try again.");
   }
-  const isActive = Boolean(
-    await MembershipPurchase.exists({
-      shiftId,
-      status: { $in: ["active", "frozen"] },
-    }),
-  );
-  if (isActive) {
-    throw new BadRequestError(
-      `The shift is Already giving service to Users Try again `,
+  const planUsesShift = await MembershipPlans.exists({ shiftId });
+  if (planUsesShift) {
+    throw new ConflictError(
+      "Cannot delete: membership plans still use this shift. Delete those plans first.",
     );
   }
   const deleted = await Shifts.deleteOne({ shiftId });
@@ -124,7 +119,7 @@ module.exports.removeTraining = async function ({ trainingId }) {
     });
 
     if (hasActiveSubscribers) {
-      throw new BadRequestError(
+      throw new ConflictError(
         "Cannot delete: members currently have active or frozen subscriptions on this training.",
       );
     }
