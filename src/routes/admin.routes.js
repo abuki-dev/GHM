@@ -10,7 +10,10 @@ const {
   getAllPlans,
   getAllShifts,
   getAllPurchases,
+  getAllCheckins,
   getAllTrainings,
+  getAllPayments,
+  getAllFeedbacks,
 } = require("../controllers/admin.controller");
 const {
   register,
@@ -59,14 +62,11 @@ adminRoutes.post(
 );
 adminRoutes.delete("/deleteshift", deleteShifts);
 adminRoutes.get("/users", getAllUsers);
-adminRoutes.get("/plans", getAllPlans);
-adminRoutes.get("/shifts", getAllShifts);
+adminRoutes.get("/checkins", getAllCheckins);
 adminRoutes.get("/purchases", getAllPurchases);
+adminRoutes.get("/plans", getAllPlans);
+adminRoutes.get("/payments", getAllPayments);
+adminRoutes.get("/shifts", getAllShifts);
 adminRoutes.get("/trainings", getAllTrainings);
-// get all users
-// get all members with email
-// get all tarinig
-// get all purchase
-// get all plans
-// get all trainers with email
+adminRoutes.get("/feedbacks", getAllFeedbacks);
 module.exports = adminRoutes;

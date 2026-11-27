@@ -12,6 +12,9 @@ const {
   allDatabaseShifts,
   allDatabaseMembershipPlans,
   allDatabaseUsers,
+  allDatabaseFeedbacks,
+  allDatabasePayments,
+  allDatabaseCheckins,
 } = require("../services/admin.service");
 
 module.exports.createTraining = async (req, res, next) => {
@@ -63,6 +66,7 @@ module.exports.deleteShifts = async (req, res, next) => {
     next(err);
   }
 };
+
 module.exports.getAllUsers = async (req, res, next) => {
   try {
     const result = await allDatabaseUsers(req.query.page);
@@ -71,17 +75,9 @@ module.exports.getAllUsers = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.getAllPlans = async (req, res, next) => {
+module.exports.getAllCheckins = async (req, res, next) => {
   try {
-    const result = await allDatabaseMembershipPlans(req.query.page);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
-};
-module.exports.getAllShifts = async (req, res, next) => {
-  try {
-    const result = await allDatabaseShifts(req.query.page);
+    const result = await allDatabaseCheckins(req.query.page);
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -95,9 +91,41 @@ module.exports.getAllPurchases = async (req, res, next) => {
     next(error);
   }
 };
+module.exports.getAllPayments = async (req, res, next) => {
+  try {
+    const result = await allDatabasePayments(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getAllShifts = async (req, res, next) => {
+  try {
+    const result = await allDatabaseShifts(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports.getAllTrainings = async (req, res, next) => {
   try {
     const result = await allDatabaseTrainings(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getAllFeedbacks = async (req, res, next) => {
+  try {
+    const result = await allDatabaseFeedbacks(req.query.page);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.getAllPlans = async (req, res, next) => {
+  try {
+    const result = await allDatabaseMembershipPlans(req.query.page);
     res.status(200).json(result);
   } catch (error) {
     next(error);

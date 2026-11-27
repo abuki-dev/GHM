@@ -68,7 +68,7 @@ module.exports.ManualCheckin = async (req, res, next) => {
 
 module.exports.todaysAttendance = async (req, res, next) => {
   try {
-    const response = await getTodaysAttendance(req.body, req.user);
+    const response = await getTodaysAttendance(req.params.date);
     res.json(response);
   } catch (error) {
     next(error);
