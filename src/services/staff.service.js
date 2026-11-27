@@ -19,12 +19,12 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
     throw new BadRequestError("Invalid Payment method");
   }
   const session = await startSession();
-  let payment;
+
   try {
     const result = await session.withTransaction(async () => {
       const staffId = id;
       const trans = transactionId.trim();
-      payment = await Payments.findOneAndUpdate(
+      const payment = await Payments.findOneAndUpdate(
         {
           transactionId: trans,
           category: { $in: ["new", "renew"] },
@@ -63,8 +63,14 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
           success: false,
         };
       }
+      const ownLive = await MembershipPurchase.findOne({
+        member_id: payment.userId,
+        membership_plan_id: payment.planId,
+        status: { $in: ["active", "frozen"] },
+        end_date: { $gt: new Date() },
+      }).session(session);
 
-      if (plan.tier !== "normal") {
+      if (plan.tier !== "normal" && ownLive) {
         const shift = await Shifts.findOneAndUpdate(
           { shiftId: plan.shiftId }, // 1. filter: which shift
           { $inc: { version: 1 } }, // 2. update: add 1 to version
@@ -153,12 +159,6 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
       };
     });
     return result;
-  } catch (error) {
-    await Payments.updateOne(
-      { _id: payment._id, status: "processing" },
-      { $set: { status: "pending" } },
-    );
-    throw error;
   } finally {
     await session.endSession();
   }
