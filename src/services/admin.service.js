@@ -83,7 +83,6 @@ module.exports.removeshift = async function ({ shiftId }) {
   }
   const planUsesShift = await MembershipPlans.exists({
     shiftId,
-    isActive: true,
   });
   if (planUsesShift) {
     throw new ConflictError(
@@ -126,9 +125,21 @@ module.exports.removeTraining = async function ({ trainingId }) {
         "Cannot delete: members currently have active or frozen subscriptions on this training.",
       );
     }
+    const waiting = await Payments.exists({
+      planId: { $in: planIds },
+      status: { $in: ["pending", "processing", "refund_pending"] },
+    });
+    if (waiting) {
+      throw new ConflictError(
+        "Cannot delete: there are unprocessed payments for plans of this training.",
+      );
+    }
 
     // 4. Optional but recommended: deactivate or remove orphaned plans so nobody buys them
-    await MembershipPlans.deleteMany({ planId: { $in: planIds } });
+    await MembershipPlans.updateMany(
+      { planId: { $in: planIds } },
+      { $set: { isActive: false } },
+    );
   }
 
   // 5. Safe to delete the training program
