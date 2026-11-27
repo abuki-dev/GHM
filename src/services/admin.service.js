@@ -81,7 +81,10 @@ module.exports.removeshift = async function ({ shiftId }) {
   if (!shiftId) {
     throw new BadRequestError("Shift ID is required. Try again.");
   }
-  const planUsesShift = await MembershipPlans.exists({ shiftId });
+  const planUsesShift = await MembershipPlans.exists({
+    shiftId,
+    isActive: true,
+  });
   if (planUsesShift) {
     throw new ConflictError(
       "Cannot delete: membership plans still use this shift. Delete those plans first.",
