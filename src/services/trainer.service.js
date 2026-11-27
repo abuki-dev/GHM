@@ -15,9 +15,14 @@ module.exports.getMyShifts = async (user) => {
 module.exports.getMySessions = async (user) => {
   const trainer = await getTrainer(user);
   const shifted = new Date(Date.now() + 3 * 60 * 60 * 1000);
-  const start = new Date(Date.UTC(
-    shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate(),
-  ) - 3 * 60 * 60 * 1000);
+  const start = new Date(
+    Date.UTC(
+      shifted.getUTCFullYear(),
+      shifted.getUTCMonth(),
+      shifted.getUTCDate(),
+    ) -
+      3 * 60 * 60 * 1000,
+  );
   const end = new Date(start.getTime() + 86_400_000);
 
   return Sessions.find({
@@ -37,13 +42,19 @@ module.exports.updateMySession = async (user, sessionId, updates) => {
   if (updates.calories_burned !== undefined) {
     const calories = Number(updates.calories_burned);
     if (!Number.isFinite(calories) || calories < 0) {
-      throw new BadRequestError("Calories burned must be a positive number or zero.");
+      throw new BadRequestError(
+        "Calories burned must be a positive number or zero.",
+      );
     }
     allowed.calories_burned = calories;
   }
 
   if (updates.status !== undefined) {
-    if (!["scheduled", "in_progress", "completed", "cancelled"].includes(updates.status)) {
+    if (
+      !["scheduled", "in_progress", "completed", "cancelled"].includes(
+        updates.status,
+      )
+    ) {
       throw new BadRequestError("Invalid session status.");
     }
     allowed.status = updates.status;

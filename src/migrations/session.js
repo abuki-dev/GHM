@@ -6,19 +6,19 @@ const sessionSchema = new mongoose.Schema(
       type: String,
       ref: "members",
       required: true,
-      index: true
+      index: true,
     },
     trainer_id: {
       type: String,
       ref: "trainers",
-      index: true
+      index: true,
     },
     start_time: {
       type: String,
-      required: true
+      required: true,
     },
     end_time: { type: Date },
-    calories_burned: { type: Number , min: 0},
+    calories_burned: { type: Number, min: 0 },
     status: {
       type: String,
       enum: ["scheduled", "completed", "cancelled", "in_progress"],
