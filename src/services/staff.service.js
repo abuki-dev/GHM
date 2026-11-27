@@ -36,7 +36,9 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
       ).session(session);
 
       if (!payment) {
-        throw new BadRequestError("Payment Not Found try again");
+        throw new BadRequestError(
+          "Payment Not Found try again or The payment Is already Verfied",
+        );
       }
 
       const user = await Users.findOne({ userId: payment.userId });

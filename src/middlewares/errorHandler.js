@@ -1,7 +1,7 @@
 const env = require("../config/env");
 
 function notFound(req, res) {
-  res.status(404).json({ error: "Not found" });
+  res.status(404).json({ error: "Not found", path: req.path });
 }
 function errorHandler(err, req, res, next) {
   // 1. Log error stack trace on the server for debugging
@@ -14,7 +14,8 @@ function errorHandler(err, req, res, next) {
 
   let statusCode = err.statusCode || err.status || 500;
   let message = err.message || "Something went wrong";
-
+  let path = req.path;
+  console.log("Error Path:", path);
   // --- MONGOOSE / MONGODB ERRORS ---
 
   // Invalid ObjectId (e.g., Cast to ObjectId failed for value "123")
@@ -76,6 +77,7 @@ function errorHandler(err, req, res, next) {
       statusCode === 500 && env.NODE_ENV === "production"
         ? "Internal server error"
         : message,
+    path: path,
     // Include stack trace only in local development
     ...(env.NODE_ENV !== "production" && { stack: err.stack }),
   });
