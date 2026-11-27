@@ -431,8 +431,8 @@ module.exports.manualCheckin = async ({ member_id, phone }) => {
   };
 };
 
-module.exports.getTodaysAttendance = async () => {
-  const shifted = new Date(Date.now() + 3 * 60 * 60 * 1000);
+module.exports.getTodaysAttendance = async (date) => {
+  const shifted = new Date(date);
   const start = new Date(
     Date.UTC(
       shifted.getUTCFullYear(),

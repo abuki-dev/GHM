@@ -59,6 +59,6 @@ staffRouter.patch(
 //   approveRenewal,
 // );
 staffRouter.post("/checkin", ManualCheckin);
-staffRouter.get("/attendance/today", todaysAttendance);
+staffRouter.get("/attendance/:date", todaysAttendance);
 
 module.exports = staffRouter;
