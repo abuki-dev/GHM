@@ -70,7 +70,7 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
         end_date: { $gt: new Date() },
       }).session(session);
 
-      if (plan.tier !== "normal" && ownLive) {
+      if (plan.tier !== "normal" && !ownLive) {
         const shift = await Shifts.findOneAndUpdate(
           { shiftId: plan.shiftId }, // 1. filter: which shift
           { $inc: { version: 1 } }, // 2. update: add 1 to version
