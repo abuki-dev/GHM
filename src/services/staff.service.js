@@ -49,9 +49,12 @@ module.exports.approve = async ({ transactionId, method }, { id }) => {
       // if the purchase is not the same check the remaining date
       // if the remaning day less than 5 createhim  one below and mark the exisiting as expired
       // if is not throw cnfilict error that the user cannot have 2 purchases
-      const plan = await MembershipPlans.findOne({ planId: payment.planId });
+      const plan = await MembershipPlans.findOne({
+        planId: payment.planId,
+        isActive: true,
+      }).session(session);
       if (!plan) {
-        throw new BadRequestError("Membership Plan Not Found");
+        throw new BadRequestError("Membership Plan Not Found or IS Inactive");
       }
       if (payment.amount !== plan.price) {
         payment.status = "refund_pending";

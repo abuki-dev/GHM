@@ -239,7 +239,7 @@ module.exports.savePaymentInfos = async (
 
   await expireStalePurchase(id);
   const [plan, openPayment] = await Promise.all([
-    MembershipPlans.findOne({ planId: planId.trim() }),
+    MembershipPlans.findOne({ planId: planId.trim(), isActive: true }),
     Payments.findOne({
       userId: id,
       status: { $in: ["pending", "processing"] },
