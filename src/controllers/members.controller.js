@@ -5,10 +5,9 @@ const {
   getUsrePaymentHistory,
 } = require("../services");
 const {
+  memberService,
   generateGympass,
   createRenewalRequest,
-  memberService,
-  createFeedback,
 } = require("../services/member.service");
 
 // get all subscriptions from the database
@@ -25,7 +24,10 @@ module.exports.sendMemberSubscriptions = async (req, res, next) => {
   try {
     //here we send the all subscriptions of the membe
     // console.log("Fetching subscriptions for userId:", req.user);
-    const memberSubscriptions = await getMemberSubscriptions(req.user);
+    const memberSubscriptions = await getMemberSubscriptions(
+      req.user,
+      req.query.page,
+    );
     res.status(200).json({ memberSubscriptions });
   } catch (error) {
     next(error);
@@ -50,10 +52,7 @@ module.exports.sendHistory = async (req, res, next) => {
 
 module.exports.getGympass = async (req, res, next) => {
   try {
-    const { qrToken, exp } = await generateGympass({
-      id: req.user.id,
-      purchaseId: req.query.purchaseId,
-    });
+    const { qrToken, exp } = await generateGympass(req.user);
     res.status(200).json({
       qrToken,
       expiresAt: exp,
@@ -73,7 +72,7 @@ module.exports.requestRenewal = async (req, res, next) => {
 
 module.exports.getMyProfile = async (req, res) => {
   try {
-    const user = await memberService(req.user);
+    const user = await memberService.getMyProfile(req.user);
     res.json(user);
   } catch (error) {
     next(error);
@@ -116,7 +115,7 @@ module.exports.cancelMyPayment = async (req, res) => {
 module.exports.freezeMyMembership = async (req, res) => {
   try {
     const purchase = await memberService.freezeMyMembership(
-      req.body.days,
+      Number(req.body.days),
       req.user,
     );
     res.json(purchase);
@@ -136,7 +135,7 @@ module.exports.resumeMyMembership = async (req, res) => {
 
 module.exports.feedbacks = async (req, res, next) => {
   try {
-    const feedback = await createFeedback(req.body, req.user);
+    const feedback = await memberService.createFeedback(req.body, req.user);
     res.status(200).json(feedback);
   } catch (error) {
     next(error);
