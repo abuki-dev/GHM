@@ -1,7 +1,7 @@
 const { decline, sendPayments, approve } = require("../services");
 const {
   refund,
-  renewPurchaseRequest,
+  // renewPurchaseRequest,
   getRenewalPayments,
   manualCheckin,
   getTodaysAttendance,
@@ -40,14 +40,14 @@ module.exports.markPaymentRefunded = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.approveRenewal = async (req, res, next) => {
-  try {
-    const response = await renewPurchaseRequest(req.body, req.user);
-    res.json(response);
-  } catch (error) {
-    next(error);
-  }
-};
+// module.exports.approveRenewal = async (req, res, next) => {
+//   try {
+//     const response = await renewPurchaseRequest(req.body, req.user);
+//     res.json(response);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 module.exports.renewalRequests = async (req, res, next) => {
   try {
     const renewalRequests = await getRenewalPayments(req.query.page);

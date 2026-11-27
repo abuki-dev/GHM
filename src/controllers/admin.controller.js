@@ -7,11 +7,11 @@ const {
 } = require("../services");
 const {
   removePlan,
-  allDatabaseUsers,
-  allDatabasePlans,
-  allDatabaseShifts,
-  allDatabasePurchases,
   allDatabaseTrainings,
+  allDatabaseMembershipPurchases,
+  allDatabaseShifts,
+  allDatabaseMembershipPlans,
+  allDatabaseUsers,
 } = require("../services/admin.service");
 
 module.exports.createTraining = async (req, res, next) => {
@@ -73,7 +73,7 @@ module.exports.getAllUsers = async (req, res, next) => {
 };
 module.exports.getAllPlans = async (req, res, next) => {
   try {
-    const result = await allDatabasePlans(req.query.page);
+    const result = await allDatabaseMembershipPlans(req.query.page);
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -89,7 +89,7 @@ module.exports.getAllShifts = async (req, res, next) => {
 };
 module.exports.getAllPurchases = async (req, res, next) => {
   try {
-    const result = await allDatabasePurchases(req.query.page);
+    const result = await allDatabaseMembershipPurchases(req.query.page);
     res.status(200).json(result);
   } catch (error) {
     next(error);
