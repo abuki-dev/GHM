@@ -97,7 +97,7 @@ module.exports.removeshift = async function ({ shiftId }) {
     throw new BadRequestError("the shift is not Founded in the Database");
   }
   //// 3. Clean up (or deactivate) any MembershipPlans tied to this deleted shift
-  //await MembershipPlans.deleteMany({ shiftId });
+  await MembershipPlans.deleteMany({ shiftId });
   return { message: "Shift deleted successfully", success: true };
 };
 module.exports.removeTraining = async function ({ trainingId }) {
@@ -130,7 +130,7 @@ module.exports.removeTraining = async function ({ trainingId }) {
     }
 
     // 4. Optional but recommended: deactivate or remove orphaned plans so nobody buys them
-    //await MembershipPlans.deleteMany({ planId: { $in: planIds } });
+    await MembershipPlans.deleteMany({ planId: { $in: planIds } });
   }
 
   // 5. Safe to delete the training program
