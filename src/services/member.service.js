@@ -574,35 +574,6 @@ module.exports.createRenewalRequest = async (
   };
 };
 
-module.exports.getMyProfile = async ({ id }) => {
-  const user = await Users.findOne({ userId: id })
-    .select("userId full_name email phone gender age role")
-    .lean();
-
-  if (!user) throw new BadRequestError("Member not found.");
-  return user;
-};
-
-module.exports.updateMyProfile = async (
-  { full_name, phone, gender, age },
-  { id },
-) => {
-  const updates = {};
-  if (full_name !== undefined) updates.full_name = full_name;
-  if (phone !== undefined) updates.phone = phone;
-  if (gender !== undefined) updates.gender = gender;
-  if (age !== undefined) updates.age = age;
-
-  const user = await Users.findOneAndUpdate(
-    { userId: id, role: "member" },
-    { $set: updates },
-    { new: true, runValidators: true },
-  ).select("userId full_name email phone gender age role");
-
-  if (!user) throw new BadRequestError("Member not found.");
-  return user;
-};
-
 module.exports.getMyAttendance = async ({ id }, page = 1) => {
   const currentPage = Math.max(1, Number.parseInt(page, 10) || 1);
   const limit = 20;

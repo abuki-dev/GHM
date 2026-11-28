@@ -69,24 +69,6 @@ module.exports.requestRenewal = async (req, res, next) => {
   }
 };
 
-module.exports.getMyProfile = async (req, res, next) => {
-  try {
-    const user = await memberService.getMyProfile(req.user);
-    res.json(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports.updateMyProfile = async (req, res, next) => {
-  try {
-    const user = await memberService.updateMyProfile(req.body, req.user);
-    res.json(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
 module.exports.getMyAttendance = async (req, res, next) => {
   try {
     const attendance = await memberService.getMyAttendance(

@@ -12,11 +12,6 @@ const {
   resumeMyMembership,
   createFeedback,
 } = require("../controllers/members.controller");
-const {
-  myProfile,
-  updateMyProfile,
-} = require("../controllers/auth.controller");
-
 // te user gets all avalble subscriptons
 const memberRouter = Router();
 // 1. Public Route: Guests can view plans & available shift spots before signing up
@@ -30,8 +25,6 @@ memberRouter.get("/gym-pass", getGympass);
 memberRouter.post("/purchasePlan", purchaseForPlan);
 memberRouter.post("/requestRenewal", requestRenewal);
 
-memberRouter.get("/profile", myProfile);
-memberRouter.patch("/profile", updateMyProfile);
 memberRouter.get("/attendance", getMyAttendance);
 memberRouter.delete("/payments/:id", cancelMyPayment);
 memberRouter.post("/membership/freeze", freezeMyMembership);
