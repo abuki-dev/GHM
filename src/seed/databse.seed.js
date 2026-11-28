@@ -48,8 +48,8 @@ const {
   Sessions,
   Feedbacks,
 } = require("../migrations");
-
-const DEMO_PASSWORD = process.env.SEED_PASSWORD || "Passw0rd!";
+const env = require("../config/env");
+const DEMO_PASSWORD = env.SEED_PASSWORD || "Passw0rd!";
 const DAY = 24 * 60 * 60 * 1000;
 const ADDIS_OFFSET = 3 * 60 * 60 * 1000; // Africa/Addis_Ababa = UTC+3, no daylight saving
 
@@ -483,7 +483,7 @@ const FEEDBACKS = [
 /* ------------------------------------------------------------------ */
 
 async function createFirstAdminFromEnv() {
-  const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_PHONE, ADMIN_NAME } = process.env;
+  const { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_PHONE, ADMIN_NAME } = env;
   if (!ADMIN_EMAIL || !ADMIN_PASSWORD || !ADMIN_PHONE) {
     console.warn(
       "No admin account exists. Set ADMIN_EMAIL, ADMIN_PASSWORD and ADMIN_PHONE to create the first admin.",
@@ -948,11 +948,11 @@ const seedDatabase = async () => {
     // never touch a database that already has an admin
     if (await Users.exists({ role: "admin" })) return;
 
-    if (process.env.NODE_ENV === "production") {
+    if (env.NODE_ENV === "production") {
       await createFirstAdminFromEnv();
       return;
     }
-    if (process.env.SEED_DATABASE === "false") {
+    if (env.SEED_DATABASE === "false") {
       console.log("SEED_DATABASE=false: demo seed skipped.");
       return;
     }
