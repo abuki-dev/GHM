@@ -10,6 +10,11 @@ const env = {
   CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || "http://localhost:3000",
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASS: process.env.EMAIL_PASS,
+  ADMIN_NAME: process.env.ADMIN_NAME,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  ADMIN_PHONE: process.env.ADMIN_PHONE,
+  SEED_PASSWORD: process.enc.SEED_PASSWORD,
 };
 env.isProd = env.NODE_ENV === "production";
 

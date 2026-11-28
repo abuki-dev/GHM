@@ -6,14 +6,16 @@ const {
   sendHistory,
   getGympass,
   requestRenewal,
-  getMyProfile,
-  updateMyProfile,
   getMyAttendance,
   cancelMyPayment,
   freezeMyMembership,
   resumeMyMembership,
-  feedbacks,
+  createFeedback,
 } = require("../controllers/members.controller");
+const {
+  myProfile,
+  updateMyProfile,
+} = require("../controllers/auth.controller");
 
 // te user gets all avalble subscriptons
 const memberRouter = Router();
@@ -28,11 +30,11 @@ memberRouter.get("/gym-pass", getGympass);
 memberRouter.post("/purchasePlan", purchaseForPlan);
 memberRouter.post("/requestRenewal", requestRenewal);
 
-memberRouter.get("/profile", getMyProfile);
+memberRouter.get("/profile", myProfile);
 memberRouter.patch("/profile", updateMyProfile);
 memberRouter.get("/attendance", getMyAttendance);
 memberRouter.delete("/payments/:id", cancelMyPayment);
 memberRouter.post("/membership/freeze", freezeMyMembership);
 memberRouter.post("/membership/resume", resumeMyMembership);
-memberRouter.post("/feedback", feedbacks);
+memberRouter.post("/feedback", createFeedback);
 module.exports = memberRouter;
