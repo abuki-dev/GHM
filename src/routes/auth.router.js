@@ -9,6 +9,7 @@ const {
   logout,
   getProfile,
   updateProfile,
+  changePassword,
 } = require("../controllers/auth.controller");
 const {
   ValidateRegister,
@@ -41,14 +42,28 @@ authRouter.post(
   handleValidationErrors,
   login,
 );
+authRouter.use(authenticate);
 authRouter.post(
   "/chekin",
-  authenticate,
   chekinLimiter,
   requireRole("staff", "admin"),
   chekinUser,
 );
-authRouter.get("/profile", authenticate, getProfile);
-authRouter.patch("/profile", authenticate, updateProfile);
+authRouter.get("/profile", getProfile);
+authRouter.patch(
+  "/profile",
+  ValidateRegister[1],
+  ValidateRegister[2],
+  ValidateRegister[5],
+  handleValidationErrors,
+  updateProfile,
+);
+authRouter.patch(
+  "/change-password",
+  ValidateRegister[3],
+  ValidateRegister[4],
+  handleValidationErrors,
+  changePassword,
+);
 authRouter.post("/logout", logout);
 module.exports = authRouter;

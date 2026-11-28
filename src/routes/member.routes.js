@@ -10,7 +10,7 @@ const {
   cancelMyPayment,
   freezeMyMembership,
   resumeMyMembership,
-  createFeedback,
+  feedbacks,
 } = require("../controllers/members.controller");
 // te user gets all avalble subscriptons
 const memberRouter = Router();
@@ -29,5 +29,5 @@ memberRouter.get("/attendance", getMyAttendance);
 memberRouter.delete("/payments/:id", cancelMyPayment);
 memberRouter.post("/membership/freeze", freezeMyMembership);
 memberRouter.post("/membership/resume", resumeMyMembership);
-memberRouter.post("/feedback", createFeedback);
+memberRouter.post("/feedback", feedbacks);
 module.exports = memberRouter;

@@ -8,7 +8,7 @@ const {
   logoutUser,
   getMyProfile,
   updateMyProfile,
-  changePassword
+  updatePassword,
 } = require("../services/auth.service");
 const { cookieOptions } = require("../utils/token");
 
@@ -91,9 +91,9 @@ module.exports.updateProfile = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.updatePassword = async (req, res, next) => {
+module.exports.changePassword = async (req, res, next) => {
   try {
-    const result = await changePassword(req.body, req.user);
+    const result = await updatePassword(req.body, req.user);
     res.json(result);
   } catch (error) {
     next(error);
