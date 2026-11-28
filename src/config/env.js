@@ -14,7 +14,7 @@ const env = {
   ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
   ADMIN_PHONE: process.env.ADMIN_PHONE,
-  SEED_PASSWORD: process.enc.SEED_PASSWORD,
+  SEED_PASSWORD: process.env.SEED_PASSWORD,
 };
 env.isProd = env.NODE_ENV === "production";
 
