@@ -8,6 +8,7 @@ const {
   logoutUser,
   getProfile,
   updateProfile,
+  changePassword,
 } = require("../services/auth.service");
 const { cookieOptions } = require("../utils/token");
 
@@ -86,6 +87,14 @@ module.exports.updateMyProfile = async (req, res, next) => {
   try {
     const user = await updateProfile(req.body, req.user);
     res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.updatePassword = async (req, res, next) => {
+  try {
+    const result = await changePassword(req.body, req.user);
+    res.json(result);
   } catch (error) {
     next(error);
   }
