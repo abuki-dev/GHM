@@ -4,7 +4,11 @@ const {
   createStandard,
   generateUserSession,
 } = require("../services");
-const { logoutUser } = require("../services/auth.service");
+const {
+  logoutUser,
+  getProfile,
+  updateProfile,
+} = require("../services/auth.service");
 const { cookieOptions } = require("../utils/token");
 
 module.exports.register = async (req, res, next) => {
@@ -65,6 +69,23 @@ module.exports.chekinUser = async (req, res, next) => {
   try {
     const session = await generateUserSession(req.body);
     res.status(201).json({ message: "Session generated ", session });
+  } catch (error) {
+    next(error);
+  }
+};
+module.exports.myProfile = async (req, res, next) => {
+  try {
+    const user = await getProfile(req.user);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports.updateMyProfile = async (req, res, next) => {
+  try {
+    const user = await updateProfile(req.body, req.user);
+    res.json(user);
   } catch (error) {
     next(error);
   }
