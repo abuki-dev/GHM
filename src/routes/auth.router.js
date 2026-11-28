@@ -7,6 +7,8 @@ const {
   login,
   chekinUser,
   logout,
+  getProfile,
+  updateProfile,
 } = require("../controllers/auth.controller");
 const {
   ValidateRegister,
@@ -46,5 +48,7 @@ authRouter.post(
   requireRole("staff", "admin"),
   chekinUser,
 );
+authRouter.get("/profile", authenticate, getProfile);
+authRouter.patch("/profile", authenticate, updateProfile);
 authRouter.post("/logout", logout);
 module.exports = authRouter;
