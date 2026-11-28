@@ -6,8 +6,8 @@ const {
 } = require("../services");
 const {
   logoutUser,
-  getProfile,
-  updateProfile,
+  getMyProfile,
+  updateMyProfile,
 } = require("../services/auth.service");
 const { cookieOptions } = require("../utils/token");
 
@@ -73,18 +73,18 @@ module.exports.chekinUser = async (req, res, next) => {
     next(error);
   }
 };
-module.exports.myProfile = async (req, res, next) => {
+module.exports.getProfile = async (req, res, next) => {
   try {
-    const user = await getProfile(req.user);
+    const user = await getMyProfile(req.user);
     res.json(user);
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.updateMyProfile = async (req, res, next) => {
+module.exports.updateProfile = async (req, res, next) => {
   try {
-    const user = await updateProfile(req.body, req.user);
+    const user = await updateMyProfile(req.body, req.user);
     res.json(user);
   } catch (error) {
     next(error);

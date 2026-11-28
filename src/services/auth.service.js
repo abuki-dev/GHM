@@ -148,16 +148,16 @@ module.exports.logoutUser = async (res) => {
   res.clearCookie("token", cookieOptions);
   return { message: "Logout succuss ", seccuss: true };
 };
-module.exports.getProfile = async ({ id }) => {
+module.exports.getMyProfile = async ({ id }) => {
   const user = await Users.findOne({ userId: id })
     .select("userId full_name email phone gender age role")
     .lean();
 
-  if (!user) throw new BadRequestError("Member not found.");
+  if (!user) throw new BadRequestError("User not found.");
   return user;
 };
 
-module.exports.updateProfile = async (
+module.exports.updateMyProfile = async (
   { full_name, phone, gender, age },
   { id },
 ) => {
@@ -167,12 +167,18 @@ module.exports.updateProfile = async (
   if (gender !== undefined) updates.gender = gender;
   if (age !== undefined) updates.age = age;
 
+  if (Object.keys(updates).length === 0) {
+    throw new BadRequestError(
+      "Nothing to update. Send full_name, phone, gender or age.",
+    );
+  }
+
   const user = await Users.findOneAndUpdate(
-    { userId: id, role: "member" },
+    { userId: id },
     { $set: updates },
-    { new: true, runValidators: true },
+    { returnDocument: "after", runValidators: true },
   ).select("userId full_name email phone gender age role");
 
-  if (!user) throw new BadRequestError("Member not found.");
+  if (!user) throw new BadRequestError("User not found.");
   return user;
 };
