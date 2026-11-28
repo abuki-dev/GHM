@@ -52,16 +52,16 @@ authRouter.post(
 authRouter.get("/profile", getProfile);
 authRouter.patch(
   "/profile",
+  ValidateRegister[0],
   ValidateRegister[1],
-  ValidateRegister[2],
-  ValidateRegister[5],
+  ValidateRegister[4],
   handleValidationErrors,
   updateProfile,
 );
 authRouter.patch(
   "/change-password",
+  ValidateRegister[2],
   ValidateRegister[3],
-  ValidateRegister[4],
   handleValidationErrors,
   changePassword,
 );
