@@ -182,12 +182,15 @@ module.exports.updateMyProfile = async (
   if (!user) throw new BadRequestError("User not found.");
   return user;
 };
-module.exports.updatePassword = async ({ password, newPassword }, { id }) => {
+module.exports.updatePassword = async ({ oldPassword, password }, { id }) => {
+  if (!oldPassword) {
+    throw new BadRequestError("Old password and new password are required.");
+  }
   const user = await Users.findOne({ userId: id }).select("+password");
   if (!user) throw new BadRequestError("Member not found.");
-  const isMatch = await compare(password, user.password);
+  const isMatch = await compare(oldPassword, user.password);
   if (!isMatch) throw new BadRequestError("Current password is incorrect.");
-  const hashedPassword = await hash(newPassword, 10);
+  const hashedPassword = await hash(password, 10);
   user.password = hashedPassword;
   await user.save();
   return { message: "Password changed successfully", success: true };
