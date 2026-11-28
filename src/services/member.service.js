@@ -574,36 +574,7 @@ module.exports.createRenewalRequest = async (
   };
 };
 
-module.exports.getMyProfile = async ({ id }) => {
-  const user = await Users.findOne({ userId: id })
-    .select("userId full_name email phone gender age role")
-    .lean();
-
-  if (!user) throw new BadRequestError("Member not found.");
-  return user;
-};
-
-module.exports.updateMyProfile = async (
-  { full_name, phone, gender, age },
-  { id },
-) => {
-  const updates = {};
-  if (full_name !== undefined) updates.full_name = full_name;
-  if (phone !== undefined) updates.phone = phone;
-  if (gender !== undefined) updates.gender = gender;
-  if (age !== undefined) updates.age = age;
-
-  const user = await Users.findOneAndUpdate(
-    { userId: id, role: "member" },
-    { $set: updates },
-    { new: true, runValidators: true },
-  ).select("userId full_name email phone gender age role");
-
-  if (!user) throw new BadRequestError("Member not found.");
-  return user;
-};
-
-module.exports.getMyAttendance = async ({ id }, page = 1) => {
+module.exports.getAttendance = async ({ id }, page = 1) => {
   const currentPage = Math.max(1, Number.parseInt(page, 10) || 1);
   const limit = 20;
   const [items, total] = await Promise.all([
@@ -618,7 +589,7 @@ module.exports.getMyAttendance = async ({ id }, page = 1) => {
   return { items, total, page: currentPage, limit };
 };
 
-module.exports.cancelMyPayment = async ({ id }, paymentId) => {
+module.exports.cancelPayment = async ({ id }, paymentId) => {
   const payment = await Payments.findOneAndUpdate(
     { _id: paymentId, userId: id, status: "pending" },
     { $set: { status: "cancelled" } },
@@ -631,7 +602,7 @@ module.exports.cancelMyPayment = async ({ id }, paymentId) => {
   return payment;
 };
 
-module.exports.freezeMyMembership = async ({ id }, days) => {
+module.exports.freezeMembership = async ({ id }, days) => {
   if (!Number.isInteger(days) || days < 1 || days > 30) {
     throw new BadRequestError("Freeze duration must be from 1 to 30 days.");
   }
@@ -655,7 +626,7 @@ module.exports.freezeMyMembership = async ({ id }, days) => {
   return purchase;
 };
 
-module.exports.resumeMyMembership = async ({ id }) => {
+module.exports.resumeMembership = async ({ id }) => {
   const purchase = await MembershipPurchase.findOne({
     member_id: id,
     status: "frozen",
@@ -688,7 +659,7 @@ module.exports.resumeMyMembership = async ({ id }) => {
   await purchase.save();
   return purchase;
 };
-module.exports.createFeedback = async ({ id }, { title, body }) => {
+module.exports.newFeedback = async ({ id }, { title, body }) => {
   if (!title?.trim() || !body?.trim()) {
     throw new BadRequestError("Title and feedback body are required.");
   }

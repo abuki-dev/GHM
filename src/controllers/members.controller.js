@@ -5,9 +5,13 @@ const {
   getUsrePaymentHistory,
 } = require("../services");
 const {
-  memberService,
-  generateGympass,
   createRenewalRequest,
+  generateGympass,
+  getAttendance,
+  cancelPayment,
+  freezeMembership,
+  resumeMembership,
+  newFeedback,
 } = require("../services/member.service");
 
 // get all subscriptions from the database
@@ -70,72 +74,45 @@ module.exports.requestRenewal = async (req, res, next) => {
   }
 };
 
-module.exports.getMyProfile = async (req, res) => {
+module.exports.getMyAttendance = async (req, res, next) => {
   try {
-    const user = await memberService.getMyProfile(req.user);
-    res.json(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports.updateMyProfile = async (req, res) => {
-  try {
-    const user = await memberService.updateMyProfile(req.body, req.user);
-    res.json(user);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports.getMyAttendance = async (req, res) => {
-  try {
-    const attendance = await memberService.getMyAttendance(
-      req.query.page,
-      req.user,
-    );
+    const attendance = await getAttendance(req.query.page, req.user);
     res.json(attendance);
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.cancelMyPayment = async (req, res) => {
+module.exports.cancelMyPayment = async (req, res, next) => {
   try {
-    const payment = await memberService.cancelMyPayment(
-      req.params.id,
-      req.user,
-    );
+    const payment = await cancelPayment(req.params.id, req.user);
     res.json(payment);
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.freezeMyMembership = async (req, res) => {
+module.exports.freezeMyMembership = async (req, res, next) => {
   try {
-    const purchase = await memberService.freezeMyMembership(
-      Number(req.body.days),
-      req.user,
-    );
+    const purchase = await freezeMembership(Number(req.body.days), req.user);
     res.json(purchase);
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.resumeMyMembership = async (req, res) => {
+module.exports.resumeMyMembership = async (req, res, next) => {
   try {
-    const purchase = await memberService.resumeMyMembership(req.user);
+    const purchase = await resumeMembership(req.user);
     res.json(purchase);
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.feedbacks = async (req, res, next) => {
+module.exports.createFeedback = async (req, res, next) => {
   try {
-    const feedback = await memberService.createFeedback(req.body, req.user);
+    const feedback = await newFeedback(req.body, req.user);
     res.status(200).json(feedback);
   } catch (error) {
     next(error);
