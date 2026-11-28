@@ -27,7 +27,7 @@ memberRouter.post("/requestRenewal", requestRenewal);
 
 memberRouter.get("/attendance", getMyAttendance);
 memberRouter.delete("/payments/:id", cancelMyPayment);
-memberRouter.post("/membership/freeze", freezeMyMembership);
-memberRouter.post("/membership/resume", resumeMyMembership);
+memberRouter.post("/freeze-membership", freezeMyMembership);
+memberRouter.post("/resume-membership", resumeMyMembership);
 memberRouter.post("/feedback", feedbacks);
 module.exports = memberRouter;

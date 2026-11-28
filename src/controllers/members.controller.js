@@ -72,8 +72,8 @@ module.exports.requestRenewal = async (req, res, next) => {
 module.exports.getMyAttendance = async (req, res, next) => {
   try {
     const attendance = await memberService.getMyAttendance(
-      req.query.page,
       req.user,
+      req.query.page,
     );
     res.json(attendance);
   } catch (error) {
@@ -84,8 +84,8 @@ module.exports.getMyAttendance = async (req, res, next) => {
 module.exports.cancelMyPayment = async (req, res, next) => {
   try {
     const payment = await memberService.cancelMyPayment(
-      req.params.id,
       req.user,
+      req.params.id,
     );
     res.json(payment);
   } catch (error) {
@@ -96,8 +96,8 @@ module.exports.cancelMyPayment = async (req, res, next) => {
 module.exports.freezeMyMembership = async (req, res, next) => {
   try {
     const purchase = await memberService.freezeMyMembership(
-      Number(req.body.days),
       req.user,
+      Number(req.body.days),
     );
     res.json(purchase);
   } catch (error) {
