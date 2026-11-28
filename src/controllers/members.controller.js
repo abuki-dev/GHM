@@ -4,11 +4,7 @@ const {
   savePaymentInfos,
   getUsrePaymentHistory,
 } = require("../services");
-const {
-  memberService,
-  generateGympass,
-  createRenewalRequest,
-} = require("../services/member.service");
+const memberService = require("../services/member.service");
 
 // get all subscriptions from the database
 module.exports.sendMembershipPlans = async (req, res, next) => {
@@ -52,7 +48,7 @@ module.exports.sendHistory = async (req, res, next) => {
 
 module.exports.getGympass = async (req, res, next) => {
   try {
-    const { qrToken, exp } = await generateGympass(req.user);
+    const { qrToken, exp } = await memberService.generateGympass(req.user);
     res.status(200).json({
       qrToken,
       expiresAt: exp,
@@ -63,14 +59,17 @@ module.exports.getGympass = async (req, res, next) => {
 };
 module.exports.requestRenewal = async (req, res, next) => {
   try {
-    const message = await createRenewalRequest(req.body, req.user);
+    const message = await memberService.createRenewalRequest(
+      req.body,
+      req.user,
+    );
     res.status(200).json(message);
   } catch (error) {
     next(error);
   }
 };
 
-module.exports.getMyProfile = async (req, res) => {
+module.exports.getMyProfile = async (req, res, next) => {
   try {
     const user = await memberService.getMyProfile(req.user);
     res.json(user);
@@ -79,7 +78,7 @@ module.exports.getMyProfile = async (req, res) => {
   }
 };
 
-module.exports.updateMyProfile = async (req, res) => {
+module.exports.updateMyProfile = async (req, res, next) => {
   try {
     const user = await memberService.updateMyProfile(req.body, req.user);
     res.json(user);
@@ -88,7 +87,7 @@ module.exports.updateMyProfile = async (req, res) => {
   }
 };
 
-module.exports.getMyAttendance = async (req, res) => {
+module.exports.getMyAttendance = async (req, res, next) => {
   try {
     const attendance = await memberService.getMyAttendance(
       req.query.page,
@@ -100,7 +99,7 @@ module.exports.getMyAttendance = async (req, res) => {
   }
 };
 
-module.exports.cancelMyPayment = async (req, res) => {
+module.exports.cancelMyPayment = async (req, res, next) => {
   try {
     const payment = await memberService.cancelMyPayment(
       req.params.id,
@@ -112,7 +111,7 @@ module.exports.cancelMyPayment = async (req, res) => {
   }
 };
 
-module.exports.freezeMyMembership = async (req, res) => {
+module.exports.freezeMyMembership = async (req, res, next) => {
   try {
     const purchase = await memberService.freezeMyMembership(
       Number(req.body.days),
@@ -124,7 +123,7 @@ module.exports.freezeMyMembership = async (req, res) => {
   }
 };
 
-module.exports.resumeMyMembership = async (req, res) => {
+module.exports.resumeMyMembership = async (req, res, next) => {
   try {
     const purchase = await memberService.resumeMyMembership(req.user);
     res.json(purchase);
@@ -135,7 +134,7 @@ module.exports.resumeMyMembership = async (req, res) => {
 
 module.exports.feedbacks = async (req, res, next) => {
   try {
-    const feedback = await memberService.createFeedback(req.body, req.user);
+    const feedback = await memberService.createFeedback(req.user, req.body);
     res.status(200).json(feedback);
   } catch (error) {
     next(error);
